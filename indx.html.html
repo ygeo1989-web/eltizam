@@ -1,0 +1,2213 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>منظومة الانضباط الإداري والائتماني v3.1 Segment Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    html { font-family: 'Cairo', system-ui, sans-serif; }
+    .font-mono, .tabular-nums { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff !important; color: #0f172a !important; }
+      .bg-slate-900, .bg-slate-950 { background: #fff !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased min-h-screen pb-28">
+  <!-- Lock Screen -->
+  <div id="lock-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-5 backdrop-blur-sm">
+    <form id="lock-form" class="w-full max-w-sm rounded-2xl border border-slate-800 bg-slate-900 p-7 text-center shadow-2xl">
+      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-2xl">🔒</div>
+      <h2 id="lock-title" class="mb-1.5 text-xl font-bold text-slate-100">قفل الأمان والخصوصية</h2>
+      <p id="lock-desc" class="mb-1 text-xs text-slate-400">أدخل الرمز السري لحماية رأس المال والأرباح والديون</p>
+      <p id="lock-hint" class="mb-5 text-xs font-medium text-emerald-400">الرمز الافتراضي: 1234</p>
+      <input id="pin-input" type="password" inputmode="numeric" maxlength="4" autofocus placeholder="••••"
+        class="font-mono mx-auto mb-4 block w-48 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-emerald-500" />
+      <p id="lock-err" class="hidden mb-3 text-xs font-semibold text-rose-400"></p>
+      <button type="submit" id="btn-login" class="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-500">دخول للمنظومة</button>
+    </form>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden no-print fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border px-4 py-2.5 text-xs font-bold shadow-2xl"></div>
+
+  <!-- Main App -->
+  <div id="app-shell" class="hidden mx-auto max-w-7xl px-4 py-5 space-y-5">
+    <header class="no-print rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-xl space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 text-xl">🛡️</div>
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 id="main-title" class="text-lg font-extrabold text-white sm:text-xl">منظومة الانضباط الإداري والائتماني</h1>
+              <span class="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-300">v3.1 Segment Edition</span>
+              <span id="save-status-badge" class="rounded-full border border-blue-500/30 bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold text-blue-300">💾 محفوظ محلياً</span>
+            </div>
+            <p id="sub-title" class="text-xs text-slate-400">إدارة رأس المال والمشتريات والائتمان والأقساط والجمعيات والمخازن والتوجيه الذكي</p>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-xs">
+          <button onclick="toggleViewMode()" id="btn-mode" class="rounded-xl border border-indigo-500/40 bg-indigo-500/10 px-3 py-2 font-bold text-indigo-300 hover:bg-indigo-600 hover:text-white">🎛️ الوضع المتقدم</button>
+          <button onclick="runSmartAudit()" id="btn-agent" class="rounded-xl bg-teal-600 px-3.5 py-2 font-bold text-white hover:bg-teal-500">✨ الفحص والإرشاد الذكي</button>
+          <button onclick="openPitchModal()" id="btn-pitch" class="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 font-bold text-amber-300 hover:bg-amber-600 hover:text-white">🏆 ملخص الأثر والتحكيم</button>
+          <button onclick="toggleLang()" id="btn-lang" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 font-bold text-slate-200 hover:bg-slate-700">🌐 EN</button>
+          <button onclick="loadDemo()" id="btn-demo" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 font-semibold text-slate-200 hover:bg-slate-700">📊 عرض تجريبي</button>
+          <button onclick="resetBlank()" id="btn-reset" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 font-semibold text-rose-300 hover:bg-rose-950/60">🗑️ صفحة بيضاء</button>
+          <button onclick="exportCsv()" id="btn-csv" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 font-semibold text-teal-300 hover:bg-slate-700">📑 تصدير Excel</button>
+          <button onclick="exportJson()" id="btn-export" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 font-semibold text-emerald-300 hover:bg-slate-700">⬇️ JSON</button>
+          <label class="cursor-pointer rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 font-semibold text-blue-300 hover:bg-slate-700">
+            ⬆️ <span id="btn-import-lbl">استيراد</span>
+            <input type="file" accept="application/json" onchange="importJson(event)" class="hidden" />
+          </label>
+          <button onclick="toggleSettings()" id="btn-settings" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 font-semibold text-slate-200 hover:bg-slate-700">⚙️ الإعدادات</button>
+          <button onclick="lockNow()" id="btn-lock" class="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 font-semibold text-amber-300 hover:bg-slate-700">🔒 قفل</button>
+        </div>
+      </div>
+
+      <!-- Target Segment Bar -->
+      <div class="rounded-xl border border-slate-800 bg-slate-950/80 p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="font-bold text-slate-300">🎯 اختر الفئة المستهدفة:</span>
+          <div id="segment-buttons" class="flex flex-wrap gap-1.5"></div>
+        </div>
+        <span id="segment-desc" class="text-[11px] text-teal-300"></span>
+      </div>
+
+      <form id="settings-panel" onsubmit="saveSettings(event)" class="hidden rounded-xl border border-slate-800 bg-slate-950/80 p-4 grid grid-cols-1 gap-3 md:grid-cols-4 text-xs">
+        <div>
+          <label id="lbl-provider" class="mb-1 block text-slate-400">مزود الذكاء الاصطناعي:</label>
+          <select id="inp-provider" class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-white">
+            <option value="hybrid">تلقائي / محلي هجين (Offline + Cloud)</option>
+            <option value="gemini">Google Gemini API (مباشر)</option>
+            <option value="openai">OpenAI / Groq API (مباشر)</option>
+          </select>
+        </div>
+        <div>
+          <label id="lbl-apikey" class="mb-1 block text-slate-400">مفتاح API (اختياري للتشغيل السحابي):</label>
+          <input id="inp-apikey" type="password" dir="ltr" placeholder="AIza... / sk-..." class="font-mono w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-white" />
+        </div>
+        <div>
+          <label id="lbl-pin" class="mb-1 block text-slate-400">تغيير الرمز السري (4 أرقام):</label>
+          <input id="inp-new-pin" type="password" maxlength="4" inputmode="numeric" class="font-mono w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-white" />
+        </div>
+        <div class="flex items-end gap-2">
+          <button type="submit" id="btn-save-settings" class="w-full rounded-xl bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-500">حفظ الإعدادات</button>
+        </div>
+      </form>
+    </header>
+
+    <!-- Capital, Purchases, Sales & Profit Strip -->
+    <section id="capital-strip" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"></section>
+
+    <!-- Impact KPIs & Net Position -->
+    <section id="kpi-row" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5"></section>
+
+    <!-- AI Assistant & Merchant Guidance Panel -->
+    <section id="ai-panel" class="no-print rounded-xl border border-slate-800 bg-slate-900 p-5 space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div>
+          <h3 id="ai-title" class="text-base font-bold text-slate-100">🤖 المستشار الذكي التنفيذي وحارس رأس المال والربح والاستدامة (Hybrid AI)</h3>
+          <p id="ai-desc" class="text-xs text-slate-400">يرشدك للتعليمات لصالحك ومستحقاتك، يحمي زبائنك بمرونة، ويدير رأس المال والمشتريات والأقساط والجمعيات والمخزون.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openMarketingModal()" class="rounded-xl border border-purple-500/40 bg-purple-500/10 px-3 py-1.5 text-xs font-bold text-purple-300 hover:bg-purple-600 hover:text-white">📣 التسويق وتصريف الراكد</button>
+          <span id="ai-badge" class="rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-[11px] font-bold text-teal-300">⚡ محرك ذكي نشط</span>
+        </div>
+      </div>
+
+      <!-- Live Priority Merchant Guidance Strip -->
+      <div id="merchant-guidance-strip" class="rounded-xl border border-amber-500/30 bg-amber-950/20 p-3.5 text-xs space-y-2"></div>
+
+      <div id="quick-prompts" class="flex flex-wrap gap-2"></div>
+      <div id="ai-error" class="hidden rounded-lg border border-rose-500/40 bg-rose-950/40 p-3 text-xs text-rose-200 flex justify-between items-center"></div>
+      <div id="ai-loading" class="hidden rounded-lg border border-teal-500/30 bg-slate-950/70 p-3 text-xs text-teal-300">⏳ جاري التحليل وإعداد التعليمات التنفيذية...</div>
+      <div id="agent-report" class="hidden space-y-3 rounded-xl border border-teal-500/30 bg-slate-950/70 p-4 text-xs"></div>
+      <div id="chat-log" class="hidden space-y-2 rounded-xl border border-slate-800 bg-slate-950/70 p-4 max-h-80 overflow-y-auto text-xs"></div>
+    </section>
+
+    <!-- Tabs -->
+    <nav id="tabs-nav" class="no-print flex flex-wrap gap-2 rounded-2xl border border-slate-800 bg-slate-900 p-2"></nav>
+
+    <!-- Tab Body -->
+    <main id="tab-content"></main>
+
+    <footer id="footer-text" class="no-print pt-4 text-center text-xs text-slate-500">
+      منظومة الانضباط الإداري والائتماني v3.1 Segment Edition © 2026 - تعمل محلياً Offline-First مع الذكاء الاصطناعي الهجين
+    </footer>
+  </div>
+
+  <!-- Fixed Bottom Copilot Bar -->
+  <div id="copilot-bar" class="hidden no-print fixed bottom-0 left-0 right-0 z-40 border-t border-emerald-500/60 bg-slate-900/95 px-4 py-2.5 backdrop-blur-md">
+    <form onsubmit="handleCopilotSubmit(event)" class="mx-auto flex max-w-7xl items-center gap-2.5">
+      <button type="button" onclick="toggleVoice()" id="btn-voice" class="h-10 w-10 shrink-0 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400" title="إدخال صوتي">🎤</button>
+      <input id="copilot-input" type="text" placeholder='اكتب أمراً: "ارشدني لمصلحتي" أو "راس المال 5000" أو "سجل شراء زيت 650" أو "قسط لمحمود 60 على 3"...'
+        class="h-10 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3.5 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none" />
+      <button type="submit" id="btn-send" class="h-10 shrink-0 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-500">إرسال</button>
+    </form>
+  </div>
+
+  <!-- Generic Modal Container -->
+  <div id="modal-backdrop" onclick="if(event.target===this)closeModal()" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
+    <div id="modal-box" class="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"></div>
+  </div>
+
+  <script>
+    const DATA_KEY = "credit_discipline_app_data_v3_1";
+    const SEGMENT_KEY = "credit_discipline_segment_v3_1";
+    const PIN_KEY = "app_pin";
+    const AI_PROVIDER_KEY = "ai_provider";
+    const AI_KEY_STORAGE = "ai_api_key";
+
+    const SEGMENT_CONFIG = {
+      retail: {
+        arLabel: "🏪 تجار التجزئة",
+        enLabel: "🏪 Retail",
+        arDesc: "واجهة المحل: رأس المال والمشتريات، العملاء، الأقساط المرنة، البضاعة والمبيعات، ليه وعليه فلوس، مستشار البضاعة، المحاكاة، ودرع الحوكمة.",
+        enDesc: "Retail view: Capital & purchases, customers, flexible installments, stock & sales, receivables/payables, advisor, simulator & privacy.",
+        tabs: ["capital", "customers", "installments", "inventory", "obligations", "advisor", "accounting", "privacy"]
+      },
+      warehouse: {
+        arLabel: "🏭 تجار المخازن",
+        enLabel: "🏭 Warehouse",
+        arDesc: "واجهة المخزن والجملة: رأس المال والمشتريات، المخازن والوحدات والتوريد، ليه وعليه فلوس، العملاء، الجمعيات، مستشار البضاعة، المحاكاة، ودرع الحوكمة.",
+        enDesc: "Warehouse view: Capital & purchases, stock & units & delivery, receivables/payables, customers, associations, advisor, simulator & privacy.",
+        tabs: ["capital", "inventory", "obligations", "customers", "associations", "advisor", "accounting", "privacy"]
+      },
+      installments: {
+        arLabel: "📅 أنشطة الأقساط",
+        enLabel: "📅 Installments",
+        arDesc: "واجهة الأقساط: رأس المال والمشتريات، الأقساط المرنة، العملاء والائتمان، البضاعة والمبيعات، ليه وعليه فلوس، الجمعيات، المحاكاة، ودرع الحوكمة.",
+        enDesc: "Installments view: Capital & purchases, flexible installments, customers, stock & sales, receivables/payables, associations, simulator & privacy.",
+        tabs: ["capital", "installments", "customers", "inventory", "obligations", "associations", "accounting", "privacy"]
+      },
+      all: {
+        arLabel: "🌐 الكل (شامل)",
+        enLabel: "🌐 All (Full)",
+        arDesc: "عرض شامل لجميع التبويبات والوحدات الإدارية والائتمانية والمالية في مكان واحد.",
+        enDesc: "Full view combining all tabs and modules.",
+        tabs: ["capital", "customers", "installments", "associations", "inventory", "obligations", "accounting", "advisor", "privacy"]
+      }
+    };
+
+    let lang = "ar";
+    let viewMode = "pro"; // "simple" | "pro"
+    let segment = localStorage.getItem(SEGMENT_KEY) || "retail";
+    if (!SEGMENT_CONFIG[segment]) segment = "retail";
+    let activeTab = "capital";
+    let maskPhones = false;
+    let seasonMult = 1.0;
+    let delayStressPct = 0;
+    let custSearch = "";
+    let custFilter = "all";
+    let invSearch = "";
+    let invFilter = "all";
+    let chatHistory = [];
+    let currentPrompts = [];
+    let lastAlerts = [];
+    let recognition = null;
+    let listening = false;
+    let idleTimer = null;
+
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const todayStr = () => new Date().toISOString().split("T")[0];
+    const daysAgoStr = (d) => new Date(Date.now() - d * 86400000).toISOString().split("T")[0];
+    const daysFromNowStr = (d) => new Date(Date.now() + d * 86400000).toISOString().split("T")[0];
+    const nowTime = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeModal();
+    });
+
+    function getAllowedTabsForCurrentView() {
+      const segTabs = SEGMENT_CONFIG[segment]?.tabs || SEGMENT_CONFIG.all.tabs;
+      if (viewMode === "simple") {
+        const simpleAllowed = ["capital", "customers", "installments", "inventory", "obligations", "accounting"];
+        return segTabs.filter((t) => simpleAllowed.includes(t));
+      }
+      return segTabs;
+    }
+
+    function setSegment(newSeg) {
+      if (!SEGMENT_CONFIG[newSeg]) return;
+      segment = newSeg;
+      try { localStorage.setItem(SEGMENT_KEY, segment); } catch {}
+      const allowed = getAllowedTabsForCurrentView();
+      if (!allowed.includes(activeTab)) activeTab = allowed[0] || "capital";
+      renderAll();
+      notify(lang === "ar" ? `تم التبديل إلى: ${SEGMENT_CONFIG[segment].arLabel}` : `Switched to: ${SEGMENT_CONFIG[segment].enLabel}`, "info");
+    }
+
+    function computeDaysLeft(c) {
+      const g = c.graceDays || 10;
+      if (c.debt <= 0) return g;
+      if (!c.debtStartDate) return c.daysLeft ?? g;
+      const diff = Math.max(0, Math.floor((new Date(todayStr() + "T00:00:00Z") - new Date(c.debtStartDate + "T00:00:00Z")) / 86400000));
+      return Math.max(0, g - diff);
+    }
+
+    function computeCreditScore(c) {
+      let score = 85;
+      if (c.frozen) score -= 45;
+      const ratio = c.limit > 0 ? c.debt / c.limit : 0;
+      if (ratio > 1) score -= 35;
+      else if (ratio >= 0.7) score -= 18;
+      else if (ratio === 0) score += 10;
+      const dl = computeDaysLeft(c);
+      if (c.debt > 0 && dl <= 0) score -= 25;
+      else if (c.debt > 0 && dl <= 3) score -= 12;
+      return Math.max(5, Math.min(100, Math.round(score)));
+    }
+
+    function recalcCustomers(list) {
+      return (list || []).map((c) => {
+        const dl = computeDaysLeft(c);
+        const score = computeCreditScore(c);
+        let status = "green";
+        if (c.frozen || c.debt > c.limit || (c.debt > 0 && dl <= 0)) status = "red";
+        else if (c.debt >= c.limit * 0.7 || (c.debt > 0 && dl <= 3)) status = "yellow";
+        return { ...c, graceDays: c.graceDays || 10, daysLeft: dl, creditScore: score, status };
+      });
+    }
+
+    function makeDemoData() {
+      return {
+        baseCapital: 5000,
+        totalPurchases: 2420,
+        totalSales: 3180,
+        purchasesLog: [
+          { id: "pur1", date: daysAgoStr(3), supplier: "شركة الفتح للتوريدات", itemName: "جبنة رومي", qty: 15, unitCost: 180, total: 2700, paymentType: "credit" },
+          { id: "pur2", date: daysAgoStr(1), supplier: "مخازن النور", itemName: "زيت عافية 750 مل", qty: 10, unitCost: 65, total: 650, paymentType: "cash" }
+        ],
+        customers: recalcCustomers([
+          { phone: "01011223344", name: "محمود حسن", debt: 45, limit: 100, graceDays: 10, debtStartDate: daysAgoStr(2), frozen: false },
+          { phone: "01233445566", name: "أحمد إبراهيم", debt: 75, limit: 100, graceDays: 10, debtStartDate: daysAgoStr(7), frozen: false },
+          { phone: "01599887766", name: "خالد سعيد", debt: 110, limit: 100, graceDays: 10, debtStartDate: daysAgoStr(12), frozen: true },
+          { phone: "01144556677", name: "سارة محمود", debt: 0, limit: 150, graceDays: 10, frozen: false }
+        ]),
+        inventory: [
+          { id: 1, name: "جبنة رومي", unit: "كرتونة", qty: 15, buy: 180, sell: 220, wholesale: 205, deliveryStatus: "delivered", expiry: daysFromNowStr(90), salesCount: 14 },
+          { id: 2, name: "زيت عافية 750 مل", unit: "كرتونة", qty: 3, buy: 65, sell: 75, wholesale: 70, deliveryStatus: "delivered", expiry: daysFromNowStr(10), salesCount: 22 },
+          { id: 3, name: "مكرونة الملكة 400ج", unit: "شيكارة", qty: 6, buy: 18, sell: 22, wholesale: 20, deliveryStatus: "pending", expiry: daysFromNowStr(45), salesCount: 1 }
+        ],
+        installments: [
+          { id: "ins1", customerPhone: "01233445566", customerName: "أحمد إبراهيم", title: "توريد بضاعة أسبوعي", totalAmount: 90, installmentAmount: 30, totalCount: 3, paidCount: 1, nextDueDate: daysFromNowStr(2), status: "active" },
+          { id: "ins2", customerPhone: "01599887766", customerName: "خالد سعيد", title: "تسوية رصيد قديم", totalAmount: 100, installmentAmount: 25, totalCount: 4, paidCount: 1, nextDueDate: daysAgoStr(2), status: "overdue" }
+        ],
+        associations: [
+          { id: "gam1", name: "جمعية تجار المنطقة", role: "member", shareAmount: 200, totalTurns: 6, currentTurn: 3, myTurn: 4, nextDate: daysFromNowStr(5), status: "active" },
+          { id: "gam2", name: "جمعية دعم رأس المال", role: "organizer", shareAmount: 150, totalTurns: 5, currentTurn: 2, myTurn: 1, nextDate: daysFromNowStr(12), status: "active" }
+        ],
+        obligations: [
+          { id: "ob1", party: "شركة الفتح للتوريدات", category: "supplier", title: "فاتورة توريد زيت وجبن", amount: 320, dueDate: daysFromNowStr(4), paid: false },
+          { id: "ob2", party: "إيجار المحل والمخزن", category: "expense", title: "إيجار الشهر الحالي", amount: 250, dueDate: daysFromNowStr(8), paid: false }
+        ],
+        requests: [{ name: "شاي العروسة ناعم", count: 3 }, { name: "مسحوق أريال أوتوماتيك", count: 2 }],
+        transactions: [
+          { id: "d1", timestamp: "10:15", type: "cash_sale", title: "بيع كاش: زيت عافية 750 مل", amount: 75, actor: "user" },
+          { id: "d2", timestamp: "11:30", type: "payment", title: "سداد جزء من المديونية — محمود حسن", amount: 55, actor: "user", customerPhone: "01011223344" },
+          { id: "d3", timestamp: "12:10", type: "credit_sale", title: "بيع آجل (1) جبنة رومي — أحمد إبراهيم", amount: 75, actor: "user", customerPhone: "01233445566" }
+        ],
+        emergencyWallet: 142.5,
+        realizedProfit: 1250
+      };
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(DATA_KEY);
+        if (!raw) return makeDemoData();
+        const p = JSON.parse(raw);
+        return {
+          baseCapital: Number(p.baseCapital) || 0,
+          totalPurchases: Number(p.totalPurchases) || 0,
+          totalSales: Number(p.totalSales) || 0,
+          purchasesLog: p.purchasesLog || [],
+          customers: recalcCustomers(p.customers),
+          inventory: (p.inventory || []).map((i) => ({
+            unit: "قطعة",
+            wholesale: i.sell,
+            deliveryStatus: "delivered",
+            ...i
+          })),
+          installments: p.installments || [],
+          associations: p.associations || [],
+          obligations: p.obligations || [],
+          requests: p.requests || [],
+          transactions: p.transactions || [],
+          emergencyWallet: Number(p.emergencyWallet) || 0,
+          realizedProfit: Number(p.realizedProfit) || 0
+        };
+      } catch { return makeDemoData(); }
+    }
+
+    let data = loadData();
+
+    function saveData() {
+      data.customers = recalcCustomers(data.customers);
+      try {
+        localStorage.setItem(DATA_KEY, JSON.stringify(data));
+        const sb = document.getElementById("save-status-badge");
+        if (sb) sb.textContent = lang === "ar" ? `💾 محفوظ محلياً (${nowTime()})` : `💾 Saved Locally (${nowTime()})`;
+      } catch {}
+      renderAll();
+    }
+
+    function notify(msg, type = "info") {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.className = `no-print fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border px-4 py-2.5 text-xs font-bold shadow-2xl ${
+        type === "error" ? "border-rose-500/50 bg-rose-950 text-rose-200" :
+        type === "success" ? "border-emerald-500/50 bg-emerald-950 text-emerald-200" :
+        "border-slate-700 bg-slate-900 text-slate-200"
+      }`;
+      setTimeout(() => el.classList.add("hidden"), 3500);
+    }
+
+    function resetIdleTimer() {
+      clearTimeout(idleTimer);
+      if (!document.getElementById("app-shell").classList.contains("hidden")) {
+        idleTimer = setTimeout(() => {
+          lockNow();
+          notify(lang === "ar" ? "تم قفل النظام تلقائياً لعدم النشاط" : "Auto-locked due to inactivity");
+        }, 10 * 60 * 1000);
+      }
+    }
+    ["click", "keydown", "mousemove", "touchstart"].forEach((evt) => document.addEventListener(evt, resetIdleTimer));
+
+    document.getElementById("lock-form").onsubmit = (e) => {
+      e.preventDefault();
+      const savedPin = localStorage.getItem(PIN_KEY) || "1234";
+      const val = document.getElementById("pin-input").value.trim();
+      if (val === savedPin) {
+        document.getElementById("lock-screen").classList.add("hidden");
+        document.getElementById("app-shell").classList.remove("hidden");
+        document.getElementById("copilot-bar").classList.remove("hidden");
+        document.getElementById("lock-err").classList.add("hidden");
+        resetIdleTimer();
+        renderAll();
+      } else {
+        const err = document.getElementById("lock-err");
+        err.textContent = lang === "ar" ? "الرمز السري غير صحيح!" : "Incorrect PIN!";
+        err.classList.remove("hidden");
+        document.getElementById("pin-input").value = "";
+      }
+    };
+
+    function lockNow() {
+      clearTimeout(idleTimer);
+      document.getElementById("pin-input").value = "";
+      document.getElementById("lock-screen").classList.remove("hidden");
+      document.getElementById("app-shell").classList.add("hidden");
+      document.getElementById("copilot-bar").classList.add("hidden");
+    }
+
+    function toggleLang() {
+      lang = lang === "ar" ? "en" : "ar";
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+      renderAll();
+    }
+
+    function toggleViewMode() {
+      viewMode = viewMode === "pro" ? "simple" : "pro";
+      const allowed = getAllowedTabsForCurrentView();
+      if (!allowed.includes(activeTab)) activeTab = allowed[0] || "capital";
+      renderAll();
+    }
+
+    function toggleSettings() {
+      document.getElementById("inp-provider").value = localStorage.getItem(AI_PROVIDER_KEY) || "hybrid";
+      document.getElementById("inp-apikey").value = localStorage.getItem(AI_KEY_STORAGE) || "";
+      document.getElementById("inp-new-pin").value = localStorage.getItem(PIN_KEY) || "1234";
+      document.getElementById("settings-panel").classList.toggle("hidden");
+    }
+
+    function saveSettings(e) {
+      e.preventDefault();
+      const np = document.getElementById("inp-new-pin").value.replace(/\D/g, "");
+      if (np && np.length !== 4) return notify(lang === "ar" ? "الرمز يجب أن يكون 4 أرقام" : "PIN must be 4 digits", "error");
+      if (np.length === 4) localStorage.setItem(PIN_KEY, np);
+      localStorage.setItem(AI_PROVIDER_KEY, document.getElementById("inp-provider").value);
+      localStorage.setItem(AI_KEY_STORAGE, document.getElementById("inp-apikey").value.trim());
+      document.getElementById("settings-panel").classList.add("hidden");
+      renderAll();
+      notify(lang === "ar" ? "تم حفظ الإعدادات بنجاح" : "Settings saved", "success");
+    }
+
+    function loadDemo() { data = makeDemoData(); saveData(); notify(lang === "ar" ? "تم تحميل بيانات العرض التجريبي المتكاملة" : "Demo loaded", "success"); }
+    function resetBlank() {
+      if (!confirm(lang === "ar" ? "⚠️ تحذير أمان: هل أنت متأكد من مسح جميع البيانات والبدء بصفحة بيضاء؟" : "Clear all data?")) return;
+      data = { baseCapital: 0, totalPurchases: 0, totalSales: 0, purchasesLog: [], customers: [], inventory: [], installments: [], associations: [], obligations: [], requests: [], transactions: [], emergencyWallet: 0, realizedProfit: 0 };
+      saveData();
+      notify(lang === "ar" ? "تمت إعادة التعيين" : "Reset complete");
+    }
+
+    function exportJson() {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify({ segment, ...data }, null, 2)], { type: "application/json" }));
+      a.download = `credit-discipline-v3_1-${segment}-${todayStr()}.json`;
+      a.click();
+      notify(lang === "ar" ? "تم تصدير النسخة الاحتياطية الكاملة (JSON)" : "JSON backup exported", "success");
+    }
+
+    function exportCsv() {
+      const bom = "\uFEFF";
+      const rows = [
+        ["النوع", "الاسم / البيان", "التفاصيل / الهاتف / الكمية", "المبلغ / الشراء", "السقف / البيع / الاستحقاق", "الحالة"],
+        ["رأس المال الأساسي", "رأس المال الأساسي", "إجمالي المشتريات: " + data.totalPurchases, data.baseCapital, "المبيعات: " + data.totalSales, "الربح: " + data.realizedProfit],
+        ...data.purchasesLog.map((p) => ["فاتورة مشتريات", `${p.itemName} (${p.supplier})`, `${p.qty} × ${p.unitCost}`, p.total, p.date, p.paymentType]),
+        ...data.customers.map((c) => ["عميل (ليه فلوس)", c.name, c.phone, c.debt, c.limit, c.status]),
+        ...data.inventory.map((i) => ["مخزون", `${i.name} (${i.unit || "قطعة"})`, i.qty, i.buy, `${i.sell} (جملة: ${i.wholesale || i.sell})`, invStatus(i)]),
+        ...data.installments.map((ins) => ["قسط", `${ins.customerName} - ${ins.title}`, `${ins.paidCount}/${ins.totalCount}`, ins.installmentAmount, ins.nextDueDate, ins.status]),
+        ...data.associations.map((g) => ["جمعية", g.name, `دور ${g.currentTurn}/${g.totalTurns} (دوري ${g.myTurn})`, g.shareAmount, g.nextDate, g.status]),
+        ...data.obligations.map((o) => ["التزام (عليه فلوس)", `${o.party} - ${o.title}`, o.category, o.amount, o.dueDate, o.paid ? "مدفوع" : "مستحق"]),
+        ...data.transactions.map((t) => ["حركة مالية", t.title, t.timestamp, t.amount, t.actor, t.type])
+      ];
+      const csv = bom + rows.map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+      a.download = `full-report-${segment}-${todayStr()}.csv`;
+      a.click();
+      notify(lang === "ar" ? "تم تصدير التقرير الشامل Excel (CSV)" : "Full Excel CSV exported", "success");
+    }
+
+    function importJson(ev) {
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = () => {
+        try {
+          const p = JSON.parse(String(r.result || "{}"));
+          if (p.segment && SEGMENT_CONFIG[p.segment]) segment = p.segment;
+          data = {
+            baseCapital: Number(p.baseCapital) || 0,
+            totalPurchases: Number(p.totalPurchases) || 0,
+            totalSales: Number(p.totalSales) || 0,
+            purchasesLog: p.purchasesLog || [],
+            customers: recalcCustomers(p.customers),
+            inventory: p.inventory || [],
+            installments: p.installments || [],
+            associations: p.associations || [],
+            obligations: p.obligations || [],
+            requests: p.requests || [],
+            transactions: p.transactions || [],
+            emergencyWallet: Number(p.emergencyWallet) || 0,
+            realizedProfit: Number(p.realizedProfit) || 0
+          };
+          saveData();
+          notify(lang === "ar" ? "تم استيراد البيانات بنجاح!" : "Imported!", "success");
+        } catch { notify(lang === "ar" ? "ملف غير صالح" : "Invalid JSON", "error"); }
+      };
+      r.readAsText(file);
+    }
+
+    function invStatus(item) {
+      if (item.expiry) {
+        const diff = (new Date(item.expiry + "T00:00:00Z") - Date.now()) / 86400000;
+        if (!Number.isNaN(diff) && diff <= 14) return "expired";
+      }
+      if (item.qty <= 3 && item.qty > 0) return "low";
+      if (item.salesCount <= 2 && item.qty > 0) return "slow";
+      return "active";
+    }
+
+    function maskPhone(ph) {
+      return (!maskPhones || ph.length < 6) ? ph : ph.slice(0, 3) + "****" + ph.slice(-3);
+    }
+
+    function showModal(html) {
+      document.getElementById("modal-box").innerHTML = html;
+      document.getElementById("modal-backdrop").classList.remove("hidden");
+    }
+    function closeModal() {
+      document.getElementById("modal-backdrop").classList.add("hidden");
+    }
+
+    function computeCapitalMetrics() {
+      const baseCapital = Math.round((Number(data.baseCapital) || 0) * 10) / 10;
+      const purchases = Math.round((Number(data.totalPurchases) || 0) * 10) / 10;
+      const sales = Math.round((Number(data.totalSales) || 0) * 10) / 10;
+      const profit = Math.round((Number(data.realizedProfit) || 0) * 10) / 10;
+      const returnCapital = Math.round((baseCapital + sales + profit) * 10) / 10;
+      return { baseCapital, returnCapital, purchases, sales, profit };
+    }
+
+    function computeFinancialPosition() {
+      const customerDebt = data.customers.reduce((s, c) => s + c.debt, 0);
+      const pendingInstallments = data.installments.reduce((s, ins) => s + Math.max(0, (ins.totalCount - ins.paidCount) * ins.installmentAmount), 0);
+      const receivables = Math.round((customerDebt + pendingInstallments) * 10) / 10;
+
+      const unpaidObligations = data.obligations.filter((o) => !o.paid).reduce((s, o) => s + o.amount, 0);
+      const activeAssocOutflow = data.associations.filter((g) => g.status === "active" && g.currentTurn !== g.myTurn).reduce((s, g) => s + g.shareAmount, 0);
+      const payables = Math.round((unpaidObligations + activeAssocOutflow) * 10) / 10;
+
+      const stockValue = Math.round(data.inventory.reduce((s, i) => s + i.buy * i.qty, 0) * 10) / 10;
+      const netPosition = Math.round((receivables + data.emergencyWallet - payables) * 10) / 10;
+      return { customerDebt, pendingInstallments, receivables, unpaidObligations, activeAssocOutflow, payables, stockValue, netPosition };
+    }
+
+    function updateBaseCapitalForm(e) {
+      e.preventDefault();
+      const val = Math.max(0, parseFloat(document.getElementById("cap-base-inp").value) || 0);
+      data.baseCapital = Math.round(val * 10) / 10;
+      data.transactions.unshift({
+        id: String(Date.now()),
+        timestamp: nowTime(),
+        type: "capital_update",
+        title: lang === "ar" ? "تحديث رأس المال الأساسي" : "Base capital updated",
+        amount: data.baseCapital,
+        actor: "user"
+      });
+      saveData();
+      notify(lang === "ar" ? "تم تحديث رأس المال الأساسي" : "Base capital updated", "success");
+    }
+
+    function recordPurchaseEntry({ supplier = "مورد عام", itemName, qty = 1, unitCost = 0, totalAmount = null, paymentType = "cash", actor = "user" }) {
+      const cleanQty = Math.max(1, parseInt(qty) || 1);
+      const computedTotal = totalAmount !== null && !Number.isNaN(Number(totalAmount))
+        ? Math.max(0, parseFloat(totalAmount) || 0)
+        : Math.max(0, (parseFloat(unitCost) || 0) * cleanQty);
+      const cleanUnitCost = cleanQty > 0 ? Math.round((computedTotal / cleanQty) * 100) / 100 : 0;
+      const cleanName = (itemName || (lang === "ar" ? "بضاعة مشتراة" : "Purchased Goods")).trim();
+
+      data.totalPurchases = Math.round((data.totalPurchases + computedTotal) * 10) / 10;
+      data.purchasesLog.unshift({
+        id: "pur_" + Date.now(),
+        date: todayStr(),
+        supplier: supplier.trim() || "مورد عام",
+        itemName: cleanName,
+        qty: cleanQty,
+        unitCost: cleanUnitCost,
+        total: computedTotal,
+        paymentType
+      });
+
+      const ex = data.inventory.find((i) => i.name.toLowerCase() === cleanName.toLowerCase());
+      if (ex) {
+        ex.qty += cleanQty;
+        if (cleanUnitCost > 0) ex.buy = cleanUnitCost;
+        if (ex.sell < ex.buy) ex.sell = Math.round(ex.buy * 1.2);
+        if (ex.wholesale < ex.buy) ex.wholesale = Math.round(ex.buy * 1.12);
+      } else {
+        const nextId = data.inventory.reduce((m, i) => Math.max(m, i.id), 0) + 1;
+        const estSell = cleanUnitCost > 0 ? Math.round(cleanUnitCost * 1.2) : 20;
+        const estWholesale = cleanUnitCost > 0 ? Math.round(cleanUnitCost * 1.12) : 18;
+        data.inventory.unshift({
+          id: nextId,
+          name: cleanName,
+          unit: "قطعة",
+          qty: cleanQty,
+          buy: cleanUnitCost,
+          sell: estSell,
+          wholesale: estWholesale,
+          deliveryStatus: "delivered",
+          expiry: daysFromNowStr(180),
+          salesCount: 0
+        });
+      }
+
+      if (paymentType === "credit" && computedTotal > 0) {
+        data.obligations.unshift({
+          id: "ob_" + Date.now(),
+          party: supplier.trim() || "مورد بضاعة",
+          category: "supplier",
+          title: `فاتورة شراء آجل: ${cleanName} (${cleanQty})`,
+          amount: computedTotal,
+          dueDate: daysFromNowStr(7),
+          paid: false
+        });
+      }
+
+      data.transactions.unshift({
+        id: String(Date.now()),
+        timestamp: nowTime(),
+        type: "purchase",
+        title: (lang === "ar" ? `شراء (${cleanQty}) ${cleanName} — ${paymentType === "credit" ? "آجل" : "نقدي"}` : `Purchase (${cleanQty}) ${cleanName}`) + ` (${supplier})`,
+        amount: computedTotal,
+        actor
+      });
+
+      saveData();
+      return { cleanName, cleanQty, computedTotal };
+    }
+
+    function savePurchaseForm(e) {
+      e.preventDefault();
+      const supplier = document.getElementById("pur-supplier").value.trim() || "مورد عام";
+      const itemName = document.getElementById("pur-item").value.trim();
+      const qty = Math.max(1, parseInt(document.getElementById("pur-qty").value) || 1);
+      const totalAmount = Math.max(0.5, parseFloat(document.getElementById("pur-total").value) || 0);
+      const paymentType = document.getElementById("pur-type").value || "cash";
+      if (!itemName) return;
+      recordPurchaseEntry({ supplier, itemName, qty, totalAmount, paymentType, actor: "user" });
+      ["pur-supplier", "pur-item", "pur-qty", "pur-total"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = id === "pur-qty" ? "1" : "";
+      });
+      notify(lang === "ar" ? "تم تسجيل فاتورة المشتريات وتحديث المخزون والالتزامات" : "Purchase recorded & linked", "success");
+    }
+
+    function buildMerchantGuidance() {
+      const cur = lang === "ar" ? "ج.م" : "EGP";
+      const pos = computeFinancialPosition();
+      const cap = computeCapitalMetrics();
+      const tips = [];
+
+      if (cap.purchases > cap.baseCapital * 0.8 && cap.baseCapital > 0) {
+        tips.push({
+          priority: "high",
+          title: lang === "ar" ? "توازن المشتريات مع رأس المال الأساسي" : "Purchases vs Base Capital Ratio",
+          text: lang === "ar"
+            ? `إجمالي المشتريات (${cap.purchases} ${cur}) يستهلك نسبة كبيرة من رأس المال الأساسي (${cap.baseCapital} ${cur}). راقب سرعة دوران المخزون وتحصيل المبيعات قبل شراء دفعات جديدة.`
+            : `Purchases (${cap.purchases} ${cur}) are high relative to base capital (${cap.baseCapital} ${cur}). Watch stock turnover and collections.`,
+          actionLabel: lang === "ar" ? "رأس المال والمشتريات" : "Capital & Purchases",
+          actionFn: "activeTab='capital';renderAll()"
+        });
+      }
+
+      if (pos.payables > pos.receivables + data.emergencyWallet) {
+        tips.push({
+          priority: "high",
+          title: lang === "ar" ? "تنبيه عجز سيولة التزامات" : "Payables Liquidity Alert",
+          text: lang === "ar"
+            ? `عليك التزامات (${pos.payables} ${cur}) أكبر من مستحقاتك المتاحة (${pos.receivables} ${cur}). ركّز اليوم على البيع الكاش وتحصيل المتأخرات قبل أي بيع آجل جديد.`
+            : `Payables (${pos.payables}) exceed receivables (${pos.receivables}). Prioritize cash sales and collections.`,
+          actionLabel: lang === "ar" ? "عرض الالتزامات" : "View Payables",
+          actionFn: "activeTab='obligations';renderAll()"
+        });
+      }
+
+      const riskyCustomers = data.customers.filter((c) => c.status === "red" || c.status === "yellow");
+      if (riskyCustomers.length > 0) {
+        const top = riskyCustomers[0];
+        const retainTip = top.creditScore >= 55
+          ? (lang === "ar"
+              ? `العميل "${top.name}" اقترب من الحد (${top.debt}/${top.limit} ${cur}) لكن جدارته مقبولة (${top.creditScore}/100). لا تجمده فجأة؛ اقترح عليه سداد 25 ${cur} أو تقسيط الباقي للحفاظ عليه كزبون دائم.`
+              : `Customer "${top.name}" is near limit (${top.debt}/${top.limit}) with fair score (${top.creditScore}/100). Offer partial pay or installments instead of hard freeze.`)
+          : (lang === "ar"
+              ? `العميل "${top.name}" متأخر (${top.debt} ${cur}). أرسل له تذكيراً ودياً للتسوية وجدولة المبلغ بأقساط ميسرة لاسترداد حقك دون خصومة.`
+              : `Customer "${top.name}" is overdue (${top.debt}). Send a polite installment settlement offer.`);
+        tips.push({
+          priority: "high",
+          title: lang === "ar" ? "حماية المستحقات دون خسارة الزبون" : "Protect Receivables & Retain Customer",
+          text: retainTip,
+          actionLabel: lang === "ar" ? "جدولة/واتساب" : "Schedule / WA",
+          actionFn: `openCustomerStatement('${esc(top.phone)}')`
+        });
+      }
+
+      const overdueIns = data.installments.filter((ins) => ins.paidCount < ins.totalCount && ins.nextDueDate <= todayStr());
+      if (overdueIns.length > 0) {
+        const ins = overdueIns[0];
+        tips.push({
+          priority: "medium",
+          title: lang === "ar" ? "قسط مستحق التحصيل الآن" : "Installment Due Now",
+          text: lang === "ar"
+            ? `قسط "${ins.customerName}" بقيمة ${ins.installmentAmount} ${cur} حلّ موعده (${ins.nextDueDate}). حصّله الآن أو رحّله بمرونة.`
+            : `Installment for "${ins.customerName}" (${ins.installmentAmount}) is due.`,
+          actionLabel: lang === "ar" ? "إدارة الأقساط" : "Installments",
+          actionFn: "activeTab='installments';renderAll()"
+        });
+      }
+
+      const myTurnAssoc = data.associations.find((g) => g.status === "active" && g.currentTurn === g.myTurn);
+      if (myTurnAssoc) {
+        const payout = myTurnAssoc.shareAmount * myTurnAssoc.totalTurns;
+        tips.push({
+          priority: "good",
+          title: lang === "ar" ? "فرصة قبض جمعية لصالحك" : "Association Payout Opportunity",
+          text: lang === "ar"
+            ? `دور قبضك في "${myTurnAssoc.name}" بقيمة ${payout} ${cur}! يُنصح بتوجيه 60% لسداد الموردين و40% لتعزيز محفظة الطوارئ وشراء بضاعة سريعة الدوران.`
+            : `Your payout turn in "${myTurnAssoc.name}" (${payout})! Allocate 60% to suppliers and 40% to emergency reserve.`,
+          actionLabel: lang === "ar" ? "فتح الجمعيات" : "Associations",
+          actionFn: "activeTab='associations';renderAll()"
+        });
+      }
+
+      const slowOrExp = data.inventory.filter((i) => invStatus(i) === "expired" || invStatus(i) === "slow");
+      if (slowOrExp.length > 0) {
+        tips.push({
+          priority: "medium",
+          title: lang === "ar" ? "تحريك البضاعة وحماية رأس المال" : "Move Slow/Expiring Stock",
+          text: lang === "ar"
+            ? `لديك ${slowOrExp.length} أصناف راكدة أو قريبة الصلاحية (مثل "${slowOrExp[0].name}"). أطلق عرضاً ترويجياً سريعاً لتحويلها إلى كاش.`
+            : `You have ${slowOrExp.length} slow/expiring items (e.g., "${slowOrExp[0].name}"). Launch a promo offer.`,
+          actionLabel: lang === "ar" ? "توليد عرض تسويقي" : "Promo Offer",
+          actionFn: "openMarketingModal()"
+        });
+      }
+
+      if (tips.length === 0) {
+        tips.push({
+          priority: "good",
+          title: lang === "ar" ? "وضعك التجاري مستقر ومنضبط" : "Healthy & Disciplined Business",
+          text: lang === "ar"
+            ? `رأس المال العائد ${cap.returnCapital} ${cur} وصافي الموقف المالي ${pos.netPosition} ${cur}. استمر في تحويل فائض السداد لمحفظة الطوارئ وتنشيط العملاء الملتزمين.`
+            : `Return capital is ${cap.returnCapital} ${cur} and net position is ${pos.netPosition} ${cur}. Keep growing your reserve.`,
+          actionLabel: lang === "ar" ? "حملة تنشيط عملاء" : "Customer Promo",
+          actionFn: "openMarketingModal()"
+        });
+      }
+      return tips;
+    }
+
+    function openPitchModal() {
+      const pos = computeFinancialPosition();
+      const cap = computeCapitalMetrics();
+      const safe = data.customers.filter((c) => c.status !== "red" && !c.frozen).length;
+      const rate = data.customers.length === 0 ? 100 : Math.round((safe / data.customers.length) * 100);
+      showModal(`
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="font-bold text-amber-400">🏆 ${lang === "ar" ? "بطاقة الأثر وقيمة الحل (Pitch & ROI)" : "Impact & ROI Snapshot"}</h3>
+          <button onclick="closeModal()" class="text-slate-400 hover:text-white">✕</button>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div class="grid grid-cols-2 gap-2">
+            <div class="rounded-xl border border-slate-800 bg-slate-950 p-3">
+              <div class="text-slate-400">${lang === "ar" ? "انضباط المحفظة الائتمانية" : "Portfolio Discipline"}</div>
+              <div class="font-mono text-xl font-extrabold text-emerald-400 mt-1">${rate}%</div>
+            </div>
+            <div class="rounded-xl border border-slate-800 bg-slate-950 p-3">
+              <div class="text-slate-400">${lang === "ar" ? "رأس المال العائد" : "Return Capital"}</div>
+              <div class="font-mono text-xl font-extrabold text-teal-400 mt-1">${cap.returnCapital}</div>
+            </div>
+          </div>
+          <div class="rounded-xl border border-slate-800 bg-slate-950 p-3 space-y-1.5 text-slate-300">
+            <div class="font-bold text-teal-300">1. ${lang === "ar" ? "تخصيص حسب الفئة المستهدفة + رأس المال:" : "Segment-Aware & Capital Core:"}</div>
+            <p>${lang === "ar" ? "تتكيف واجهة المنظومة مع التجزئة والمخازن والأقساط وتربط رأس المال الأساسي والعائد والمشتريات والمبيعات والربح مباشرة بالائتمان والالتزامات." : "Adapts tabs to retail, warehouse, or installments and ties capital, purchases, sales, and profit to credit and payables."}</p>
+            <div class="font-bold text-teal-300 pt-1">2. ${lang === "ar" ? "صافي الموقف المالي وحفظ الزبون:" : "Net Position & Retention:"}</div>
+            <p>${lang === "ar" ? `صافي الموقف الحالي (${pos.netPosition}) مع خطط تقسيط مرنة تحفظ ربح التاجر وتمنع خسارة عملائه.` : `Net position (${pos.netPosition}) with flexible installment plans to protect profit and retain customers.`}</p>
+          </div>
+          <div class="flex justify-end">
+            <button onclick="loadDemo(); closeModal();" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">${lang === "ar" ? "تجهيز بيانات العرض الآن" : "Load Live Pitch Data"}</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function openMarketingModal() {
+      const cur = lang === "ar" ? "ج.م" : "EGP";
+      const slowItems = data.inventory.filter((i) => invStatus(i) === "slow" || invStatus(i) === "expired");
+      const loyalCustomers = data.customers.filter((c) => c.creditScore >= 80 && !c.frozen);
+      const topReq = [...data.requests].sort((a, b) => b.count - a.count);
+
+      const promoText = slowItems.length > 0
+        ? (lang === "ar"
+            ? `🌟 عرض خاص لعملائنا المميزين!\nاحصل على "${slowItems[0].name}" بسعر عرض مميز ${Math.round((slowItems[0].buy + slowItems[0].sell) / 2)} ${cur} بدلاً من ${slowItems[0].sell} ${cur} لفترة محدودة أو حتى نفاد الكمية! اطلب الآن.`
+            : `🌟 Special Offer! Get "${slowItems[0].name}" at a special price of ${Math.round((slowItems[0].buy + slowItems[0].sell) / 2)} ${cur} instead of ${slowItems[0].sell} ${cur}!`)
+        : (lang === "ar"
+            ? `🌟 شكر وتقدير لعملائنا الملتزمين!\nتشكيلة جديدة وصلت الآن بأسعار خاصة لعملاء السداد المنتظم. تواصل معنا لحجز طلبيتك.`
+            : `🌟 Thank you to our loyal customers! New stock arrived with special deals.`);
+
+      showModal(`
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="font-bold text-purple-400">📣 ${lang === "ar" ? "مساعد التسويق وتنشيط المبيعات الذكي" : "AI Marketing & Stock Turnover"}</h3>
+          <button onclick="closeModal()" class="text-slate-400">✕</button>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div class="rounded-xl border border-slate-800 bg-slate-950 p-3 space-y-2">
+            <div class="font-bold text-teal-300">${lang === "ar" ? "1. رسالة عرض جاهزة لتصريف الراكد وتنشيط العملاء:" : "1. Ready Promo Message:"}</div>
+            <textarea id="mkt-msg" rows="4" class="w-full rounded-lg border border-slate-700 bg-slate-900 p-2.5 text-white">${esc(promoText)}</textarea>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">${lang === "ar" ? `العملاء الملتزمون المستهدفون: ${loyalCustomers.length}` : `Target loyal customers: ${loyalCustomers.length}`}</span>
+              <button onclick="navigator.clipboard.writeText(document.getElementById('mkt-msg').value); notify('${lang === "ar" ? "تم نسخ العرض الترويجي" : "Promo copied"}','success')" class="rounded-lg bg-purple-600 px-3 py-1.5 font-bold text-white">${lang === "ar" ? "نسخ الإعلان" : "Copy Promo"}</button>
+            </div>
+          </div>
+          <div class="rounded-xl border border-slate-800 bg-slate-950 p-3 space-y-1.5">
+            <div class="font-bold text-amber-300">${lang === "ar" ? "2. قائمة المشتريات المقترحة من طلبات الزبائن الضائعة:" : "2. Smart Restock from Missed Requests:"}</div>
+            ${topReq.length ? topReq.map((r) => `<div class="flex justify-between text-slate-300"><span>• ${esc(r.name)}</span><span class="font-mono text-amber-400">${lang === "ar" ? `طُلب ${r.count} مرات` : `Requested ${r.count}x`}</span></div>`).join("") : `<p class="text-slate-500">${lang === "ar" ? "لا توجد طلبات مسجلة حالياً" : "No missed requests"}</p>`}
+          </div>
+        </div>
+      `);
+    }
+
+    function openCustomerStatement(phone) {
+      const c = data.customers.find((x) => x.phone === phone);
+      if (!c) return;
+      const cur = lang === "ar" ? "ج.م" : "EGP";
+      const txs = data.transactions.filter((t) => t.customerPhone === phone || t.title.includes(c.name));
+      const suggestedLimit = c.creditScore >= 85 ? Math.round(c.limit * 1.25) : c.creditScore < 50 ? Math.max(20, Math.round(c.limit * 0.7)) : c.limit;
+      const retentionAdvice = c.debt > 0
+        ? (c.creditScore >= 55
+            ? (lang === "ar" ? "عميل جيد — يُنصح بجدولة المديونية أو تحصيل دفعة مرنة بدل التجميد." : "Good client — offer installment plan instead of freezing.")
+            : (lang === "ar" ? "حوّل رصيده إلى 3 أقساط ميسرة مع إيقاف الآجل الإضافي مؤقتاً." : "Convert balance to 3 installments with temporary credit pause."))
+        : (lang === "ar" ? "عميل ملتزم — مؤهل لعروض الولاء وزيادة السقف." : "Loyal client — eligible for loyalty offers.");
+
+      showModal(`
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="font-bold text-emerald-400">📄 ${lang === "ar" ? "ملف العميل والائتمان المرن — " : "Customer Profile — "}${esc(c.name)}</h3>
+          <button onclick="closeModal()" class="text-slate-400">✕</button>
+        </div>
+        <div class="space-y-3 text-xs">
+          <div class="grid grid-cols-3 gap-2 font-mono">
+            <div class="rounded-xl bg-slate-950 p-2.5 border border-slate-800"><span class="text-slate-400 block font-sans">الرصيد</span><strong class="text-rose-400 text-sm">${c.debt} ${cur}</strong></div>
+            <div class="rounded-xl bg-slate-950 p-2.5 border border-slate-800"><span class="text-slate-400 block font-sans">الجدارة</span><strong class="text-teal-400 text-sm">${c.creditScore}/100</strong></div>
+            <div class="rounded-xl bg-slate-950 p-2.5 border border-slate-800"><span class="text-slate-400 block font-sans">السقف المقترح</span><strong class="text-blue-400 text-sm">${suggestedLimit} ${cur}</strong></div>
+          </div>
+          <div class="rounded-xl border border-amber-500/30 bg-amber-950/20 p-2.5 text-amber-200">
+            🤝 <strong>${lang === "ar" ? "توجيه حفظ الزبون:" : "Retention Advice:"}</strong> ${retentionAdvice}
+          </div>
+          ${c.debt > 0 ? `
+            <div class="flex flex-wrap justify-between items-center gap-2 rounded-xl border border-teal-500/30 bg-teal-950/20 p-2.5">
+              <span>📅 ${lang === "ar" ? `تحويل الدين (${c.debt} ${cur}) إلى 3 أقساط ميسرة` : `Convert debt (${c.debt}) into 3 installments`}</span>
+              <button onclick="convertDebtToInstallments('${esc(c.phone)}', 3)" class="rounded-lg bg-teal-600 px-3 py-1 font-bold text-white">${lang === "ar" ? "جدولة أقساط" : "Schedule"}</button>
+            </div>` : ""}
+          ${suggestedLimit !== c.limit ? `
+            <div class="flex justify-between items-center rounded-xl border border-blue-500/30 bg-blue-950/30 p-2.5">
+              <span>💡 ${lang === "ar" ? `توصية الذكاء: تعديل السقف إلى ${suggestedLimit} ${cur}` : `AI recommends limit ${suggestedLimit}`}</span>
+              <button onclick="updateCustomerLimit('${esc(c.phone)}', ${suggestedLimit})" class="rounded-lg bg-blue-600 px-3 py-1 font-bold text-white">${lang === "ar" ? "تطبيق" : "Apply"}</button>
+            </div>` : ""}
+          <div class="space-y-1.5 max-h-40 overflow-y-auto">
+            <div class="font-bold text-slate-400">${lang === "ar" ? "سجل الحركات المرتبطة:" : "Related Transactions:"}</div>
+            ${txs.length ? txs.map((t) => `<div class="flex justify-between rounded-lg bg-slate-950 px-3 py-2 border border-slate-800"><span>[${esc(t.timestamp)}] ${esc(t.title)}</span><strong class="font-mono text-emerald-400">${t.amount}</strong></div>`).join("") : `<p class="text-slate-500">${lang === "ar" ? "لا توجد حركات مسجلة بعد" : "No transactions yet"}</p>`}
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <button onclick="openWaModal('${esc(c.phone)}')" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">💬 ${lang === "ar" ? "رسالة ودية عبر واتساب" : "Friendly WhatsApp"}</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function convertDebtToInstallments(phone, count = 3) {
+      const c = data.customers.find((x) => x.phone === phone);
+      if (!c || c.debt <= 0) return;
+      const amt = Math.round((c.debt / count) * 100) / 100;
+      data.installments.unshift({
+        id: "ins_" + Date.now(),
+        customerPhone: c.phone,
+        customerName: c.name,
+        title: lang === "ar" ? "جدولة رصيد للحفاظ على التعامل" : "Flexible Balance Schedule",
+        totalAmount: c.debt,
+        installmentAmount: amt,
+        totalCount: count,
+        paidCount: 0,
+        nextDueDate: daysFromNowStr(7),
+        status: "active"
+      });
+      c.debt = 0;
+      c.debtStartDate = undefined;
+      c.frozen = false;
+      data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "installment_plan", title: (lang === "ar" ? `جدولة أقساط (${count}) — ` : `Installments (${count}) — `) + c.name, amount: amt * count, actor: "ai", customerPhone: phone });
+      closeModal();
+      saveData();
+      notify(lang === "ar" ? "تم تحويل الرصيد لأقساط وفك التجميد بنجاح" : "Converted to installments!", "success");
+    }
+
+    function updateCustomerLimit(phone, newLimit) {
+      const c = data.customers.find((x) => x.phone === phone);
+      if (c) { c.limit = newLimit; saveData(); closeModal(); notify(lang === "ar" ? "تم تحديث السقف الائتماني" : "Limit updated", "success"); }
+    }
+
+    function saveCustomerForm(e) {
+      e.preventDefault();
+      const phone = document.getElementById("c-phone").value.trim();
+      const name = document.getElementById("c-name").value.trim();
+      const debt = Math.max(0, parseFloat(document.getElementById("c-debt").value) || 0);
+      const limit = Math.max(1, parseFloat(document.getElementById("c-limit").value) || 100);
+      if (!phone || !name) return;
+      const idx = data.customers.findIndex((c) => c.phone === phone);
+      if (idx >= 0) {
+        data.customers[idx] = { ...data.customers[idx], name, debt, limit, debtStartDate: debt > 0 ? (data.customers[idx].debtStartDate || todayStr()) : undefined };
+      } else {
+        data.customers.unshift({ phone, name, debt, limit, graceDays: 10, debtStartDate: debt > 0 ? todayStr() : undefined, frozen: false });
+      }
+      data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "debt_added", title: (lang === "ar" ? "تسجيل/تحديث عميل: " : "Customer saved: ") + name, amount: debt, actor: "user", customerPhone: phone });
+      document.getElementById("c-phone").value = "";
+      document.getElementById("c-name").value = "";
+      document.getElementById("c-debt").value = "";
+      saveData();
+      notify(lang === "ar" ? "تم حفظ العميل" : "Customer saved", "success");
+    }
+
+    function moneyAction(phone, amount, type, actor = "user") {
+      if (amount <= 0) return;
+      const c = data.customers.find((x) => x.phone === phone);
+      if (!c) return;
+      if (type === "pay") {
+        if (amount >= c.debt) {
+          data.emergencyWallet = Math.round((data.emergencyWallet + (amount - c.debt)) * 100) / 100;
+          data.realizedProfit = Math.round((data.realizedProfit + c.debt * 0.15) * 100) / 100;
+          c.debt = 0; c.debtStartDate = undefined; c.frozen = false;
+        } else {
+          data.realizedProfit = Math.round((data.realizedProfit + amount * 0.15) * 100) / 100;
+          c.debt = Math.round((c.debt - amount) * 100) / 100;
+        }
+        data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "payment", title: (lang === "ar" ? "سداد — " : "Payment — ") + c.name, amount, actor, customerPhone: phone });
+      } else {
+        c.debt = Math.round((c.debt + amount) * 100) / 100;
+        c.debtStartDate = c.debtStartDate || todayStr();
+        data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "debt_added", title: (lang === "ar" ? "إضافة دين — " : "Add debt — ") + c.name, amount, actor, customerPhone: phone });
+      }
+      saveData();
+    }
+
+    function openCustomPay(phone, type) {
+      const c = data.customers.find((x) => x.phone === phone);
+      if (!c) return;
+      showModal(`
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="font-bold text-blue-400">${type === "pay" ? (lang === "ar" ? "سداد مخصص" : "Custom Pay") : (lang === "ar" ? "إضافة دين" : "Add Debt")} — ${esc(c.name)}</h3>
+          <button onclick="closeModal()" class="text-slate-400">✕</button>
+        </div>
+        <form onsubmit="event.preventDefault(); moneyAction('${esc(phone)}', parseFloat(document.getElementById('m-amt').value)||0, '${type}'); closeModal();" class="space-y-3 text-xs">
+          <input id="m-amt" type="number" step="0.5" min="0.5" required autofocus placeholder="50" class="font-mono w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+          <div class="flex justify-end gap-2">
+            <button type="button" onclick="closeModal()" class="rounded-xl border border-slate-700 px-4 py-2 text-slate-300">${lang === "ar" ? "إلغاء" : "Cancel"}</button>
+            <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 font-bold text-white">${lang === "ar" ? "تنفيذ" : "Confirm"}</button>
+          </div>
+        </form>
+      `);
+    }
+
+    function openWaAlert(idx) {
+      const a = lastAlerts[idx];
+      if (a) openWaModal(a.phone, a.whatsappDraft || "");
+    }
+
+    function buildSmartWaMessage(c) {
+      if (lang === "ar") {
+        return `مرحباً بالأستاذ/ة ${c.name}،\nنعتز بتعاملنا الدائم معكم ونود تذكيركم بلطف بكشف حسابكم الحالي:\n• الرصيد المستحق: ${c.debt} ج.م (من سقف ${c.limit} ج.م)\n• الأيام المتبقية في المهلة: ${c.daysLeft} يوم\nكما يسعدنا دائماً ترتيب سداد ميسّر يناسبكم. شاكرين لكم حسن تعاونكم.`;
+      }
+      return `Hello ${c.name},\nWe value your partnership! Friendly statement reminder:\n• Balance due: ${c.debt} EGP (Limit: ${c.limit} EGP)\n• Grace days left: ${c.daysLeft} days\nFlexible installment options are available upon request.`;
+    }
+
+    function openWaModal(phone, draftText) {
+      const c = data.customers.find((x) => x.phone === phone) || { phone, name: phone, debt: 0, limit: 100, daysLeft: 0 };
+      const msg = draftText || buildSmartWaMessage(c);
+      const cleanPh = c.phone.replace(/\D/g, "");
+      const intlPh = c.phone.startsWith("0") ? "2" + cleanPh : cleanPh;
+      showModal(`
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="font-bold text-teal-400">💬 ${lang === "ar" ? "رسالة واتساب ودية — " : "Friendly WhatsApp — "}${esc(c.name)}</h3>
+          <button onclick="closeModal()" class="text-slate-400">✕</button>
+        </div>
+        <textarea id="wa-txt" rows="5" class="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-xs text-white">${esc(msg)}</textarea>
+        <div class="flex flex-wrap justify-between gap-2 text-xs">
+          <button onclick="draftWaAi('${esc(phone)}')" class="rounded-xl border border-teal-500/40 bg-teal-600/20 px-3 py-2 font-bold text-teal-300">✨ ${lang === "ar" ? "صياغة ذكية" : "AI Draft"}</button>
+          <div class="flex gap-2">
+            <button onclick="navigator.clipboard.writeText(document.getElementById('wa-txt').value); notify('${lang === "ar" ? "تم النسخ" : "Copied"}','success')" class="rounded-xl bg-slate-800 px-3 py-2 font-semibold">${lang === "ar" ? "نسخ" : "Copy"}</button>
+            <button onclick="window.open('https://wa.me/${intlPh}?text='+encodeURIComponent(document.getElementById('wa-txt').value),'_blank')" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">${lang === "ar" ? "فتح واتساب" : "Open WhatsApp"}</button>
+          </div>
+        </div>
+      `);
+    }
+
+    async function draftWaAi(phone) {
+      const c = data.customers.find((x) => x.phone === phone);
+      if (!c) return;
+      const apiKey = localStorage.getItem(AI_KEY_STORAGE) || "";
+      const provider = localStorage.getItem(AI_PROVIDER_KEY) || "hybrid";
+      if (!apiKey || provider === "hybrid") {
+        document.getElementById("wa-txt").value = buildSmartWaMessage(c);
+        return notify(lang === "ar" ? "تمت الصياغة عبر المحرك الذكي" : "Drafted by Smart Engine", "success");
+      }
+      try {
+        const prompt = `Write a warm, customer-retaining short ${lang === "ar" ? "Arabic" : "English"} WhatsApp payment reminder for customer ${c.name} who owes ${c.debt} EGP with ${c.daysLeft} days left, offering flexible installments if needed.`;
+        const reply = await callDirectLlm(prompt);
+        if (reply) document.getElementById("wa-txt").value = reply;
+      } catch {
+        document.getElementById("wa-txt").value = buildSmartWaMessage(c);
+      }
+    }
+
+    function toggleFreeze(phone, force) {
+      const c = data.customers.find((x) => x.phone === phone);
+      if (c) { c.frozen = force !== undefined ? force : !c.frozen; saveData(); }
+    }
+
+    function deleteCustomer(phone) {
+      if (!confirm(lang === "ar" ? "حذف هذا العميل؟" : "Delete customer?")) return;
+      data.customers = data.customers.filter((c) => c.phone !== phone);
+      saveData();
+    }
+
+    function saveItemForm(e) {
+      e.preventDefault();
+      const name = document.getElementById("i-name").value.trim();
+      const unit = document.getElementById("i-unit").value.trim() || "قطعة";
+      const qty = Math.max(1, parseInt(document.getElementById("i-qty").value) || 1);
+      const buy = Math.max(0, parseFloat(document.getElementById("i-buy").value) || 0);
+      const sell = Math.max(0, parseFloat(document.getElementById("i-sell").value) || 0);
+      const wholesale = Math.max(0, parseFloat(document.getElementById("i-wholesale").value) || sell);
+      const deliveryStatus = document.getElementById("i-deliv").value || "delivered";
+      const expiry = document.getElementById("i-exp").value || daysFromNowStr(180);
+      if (!name) return;
+      const ex = data.inventory.find((i) => i.name.toLowerCase() === name.toLowerCase());
+      if (ex) { ex.qty += qty; ex.unit = unit; ex.buy = buy; ex.sell = sell; ex.wholesale = wholesale; ex.deliveryStatus = deliveryStatus; ex.expiry = expiry; }
+      else {
+        const nextId = data.inventory.reduce((m, i) => Math.max(m, i.id), 0) + 1;
+        data.inventory.unshift({ id: nextId, name, unit, qty, buy, sell, wholesale, deliveryStatus, expiry, salesCount: 0 });
+      }
+      ["i-name", "i-qty", "i-buy", "i-sell", "i-wholesale"].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ""; });
+      saveData();
+      notify(lang === "ar" ? "تم حفظ الصنف في المخزن" : "Item saved", "success");
+    }
+
+    function toggleDeliveryStatus(id) {
+      const it = data.inventory.find((i) => i.id === id);
+      if (!it) return;
+      it.deliveryStatus = it.deliveryStatus === "pending" ? "delivered" : "pending";
+      saveData();
+    }
+
+    function sellCash(id, qty = 1, useWholesale = false, actor = "user") {
+      const it = data.inventory.find((i) => i.id === id);
+      if (!it || it.qty < qty) return;
+      const unitPrice = useWholesale ? (it.wholesale || it.sell) : it.sell;
+      const totalSale = Math.round(unitPrice * qty * 100) / 100;
+      it.qty -= qty; it.salesCount += qty;
+      data.totalSales = Math.round((data.totalSales + totalSale) * 10) / 10;
+      data.realizedProfit = Math.round((data.realizedProfit + Math.max(0, unitPrice - it.buy) * qty) * 100) / 100;
+      data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "cash_sale", title: (lang === "ar" ? `بيع كاش ${useWholesale ? "(جملة)" : ""} (${qty} ${it.unit || ""}): ` : `Cash (${qty}): `) + it.name, amount: totalSale, actor });
+      saveData();
+    }
+
+    function sellCost(id) {
+      const it = data.inventory.find((i) => i.id === id);
+      if (!it || it.qty < 1) return;
+      it.qty -= 1; it.salesCount += 1;
+      data.totalSales = Math.round((data.totalSales + it.buy) * 10) / 10;
+      data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "cost_recycling", title: (lang === "ar" ? "بيع تعادل لتصريف المخزون: " : "Break-even: ") + it.name, amount: it.buy, actor: "user" });
+      saveData();
+    }
+
+    function deleteItem(id) {
+      if (!confirm(lang === "ar" ? "حذف الصنف؟" : "Delete item?")) return;
+      data.inventory = data.inventory.filter((i) => i.id !== id);
+      saveData();
+    }
+
+    function openPosModal(id) {
+      const it = data.inventory.find((i) => i.id === id);
+      if (!it) return;
+      const opts = data.customers.map((c) => `<option value="${esc(c.phone)}">${esc(c.name)} (${c.debt}/${c.limit})</option>`).join("");
+      showModal(`
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="font-bold text-blue-400">🛒 ${lang === "ar" ? "نقطة بيع آجل / أقساط — " : "Credit POS — "}${esc(it.name)}</h3>
+          <button onclick="closeModal()" class="text-slate-400">✕</button>
+        </div>
+        <form onsubmit="confirmPos(event, ${id})" class="space-y-3 text-xs">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-slate-400 mb-1">${lang === "ar" ? "الكمية" : "Qty"} (${it.qty} ${esc(it.unit || "")})</label>
+              <input id="p-qty" type="number" min="1" max="${it.qty}" value="1" class="font-mono w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">${lang === "ar" ? "نوع التسعير" : "Price Tier"}</label>
+              <select id="p-tier" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white">
+                <option value="retail">${lang === "ar" ? "قطاعي" : "Retail"} (${it.sell})</option>
+                <option value="wholesale">${lang === "ar" ? "جملة مخازن" : "Wholesale"} (${it.wholesale || it.sell})</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">${lang === "ar" ? "العميل" : "Customer"}</label>
+            <select id="p-cust" required class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"><option value="">--</option>${opts}</select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">${lang === "ar" ? "طريقة السداد" : "Payment Mode"}</label>
+            <select id="p-mode" class="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white">
+              <option value="credit">${lang === "ar" ? "آجل على الحساب" : "Open Credit"}</option>
+              <option value="inst3">${lang === "ar" ? "تقسيط على 3 دفعات (لحفظ الزبون)" : "3 Installments"}</option>
+            </select>
+          </div>
+          <label class="flex items-center gap-2 text-amber-300"><input id="p-ovr" type="checkbox" /> <span>${lang === "ar" ? "السماح بتجاوز السقف عند الضرورة" : "Allow limit override"}</span></label>
+          <div class="flex justify-end gap-2">
+            <button type="button" onclick="closeModal()" class="rounded-xl border border-slate-700 px-4 py-2">${lang === "ar" ? "إلغاء" : "Cancel"}</button>
+            <button type="submit" class="rounded-xl bg-blue-600 px-4 py-2 font-bold text-white">${lang === "ar" ? "إتمام البيع" : "Complete"}</button>
+          </div>
+        </form>
+      `);
+    }
+
+    function confirmPos(e, id) {
+      e.preventDefault();
+      const it = data.inventory.find((i) => i.id === id);
+      const qty = Math.min(it.qty, Math.max(1, parseInt(document.getElementById("p-qty").value) || 1));
+      const tier = document.getElementById("p-tier").value;
+      const mode = document.getElementById("p-mode").value;
+      const phone = document.getElementById("p-cust").value;
+      const ovr = document.getElementById("p-ovr").checked;
+      const c = data.customers.find((x) => x.phone === phone);
+      if (!c) return;
+      const unitPrice = tier === "wholesale" ? (it.wholesale || it.sell) : it.sell;
+      const total = unitPrice * qty;
+
+      if (c.frozen && mode !== "inst3") return notify(lang === "ar" ? "الحساب مجمد! اختر التقسيط المرن أو فك التجميد." : "Account frozen!", "error");
+      if (c.debt + total > c.limit && !ovr && mode !== "inst3") return notify(lang === "ar" ? "يتجاوز السقف الائتماني! يمكنك تفعيل التجاوز أو البيع بالتقسيط." : "Exceeds limit!", "error");
+
+      it.qty -= qty; it.salesCount += qty;
+      data.totalSales = Math.round((data.totalSales + total) * 10) / 10;
+      if (mode === "inst3") {
+        const instAmt = Math.round((total / 3) * 100) / 100;
+        data.installments.unshift({
+          id: "ins_" + Date.now(),
+          customerPhone: c.phone,
+          customerName: c.name,
+          title: `${it.name} (${qty} ${it.unit || ""})`,
+          totalAmount: total,
+          installmentAmount: instAmt,
+          totalCount: 3,
+          paidCount: 0,
+          nextDueDate: daysFromNowStr(7),
+          status: "active"
+        });
+        data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "installment_sale", title: (lang === "ar" ? `بيع بالتقسيط (${qty}) ${it.name} — ` : `Installment (${qty}) ${it.name} — `) + c.name, amount: total, actor: "user", customerPhone: phone });
+      } else {
+        c.debt = Math.round((c.debt + total) * 100) / 100;
+        c.debtStartDate = c.debtStartDate || todayStr();
+        data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "credit_sale", title: (lang === "ar" ? `بيع آجل (${qty}) ${it.name} — ` : `Credit (${qty}) ${it.name} — `) + c.name, amount: total, actor: "user", customerPhone: phone });
+      }
+      closeModal(); saveData();
+    }
+
+    function saveInstallmentForm(e) {
+      e.preventDefault();
+      const phone = document.getElementById("ins-cust").value;
+      const title = document.getElementById("ins-title").value.trim();
+      const totalAmount = Math.max(1, parseFloat(document.getElementById("ins-total").value) || 0);
+      const totalCount = Math.max(1, parseInt(document.getElementById("ins-count").value) || 2);
+      const nextDueDate = document.getElementById("ins-date").value || daysFromNowStr(7);
+      const c = data.customers.find((x) => x.phone === phone);
+      if (!c || !title) return;
+      const installmentAmount = Math.round((totalAmount / totalCount) * 100) / 100;
+      data.installments.unshift({
+        id: "ins_" + Date.now(),
+        customerPhone: c.phone,
+        customerName: c.name,
+        title,
+        totalAmount,
+        installmentAmount,
+        totalCount,
+        paidCount: 0,
+        nextDueDate,
+        status: "active"
+      });
+      data.totalSales = Math.round((data.totalSales + totalAmount) * 10) / 10;
+      data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "installment_new", title: (lang === "ar" ? `إنشاء خطة أقساط (${totalCount}): ` : `New installment (${totalCount}): `) + c.name, amount: totalAmount, actor: "user", customerPhone: phone });
+      document.getElementById("ins-title").value = "";
+      document.getElementById("ins-total").value = "";
+      saveData();
+      notify(lang === "ar" ? "تمت إضافة خطة الأقساط" : "Installment plan added", "success");
+    }
+
+    function payInstallmentStep(id) {
+      const ins = data.installments.find((x) => x.id === id);
+      if (!ins || ins.paidCount >= ins.totalCount) return;
+      ins.paidCount += 1;
+      data.realizedProfit = Math.round((data.realizedProfit + ins.installmentAmount * 0.15) * 100) / 100;
+      if (ins.paidCount >= ins.totalCount) {
+        ins.status = "completed";
+      } else {
+        ins.nextDueDate = daysFromNowStr(7);
+        ins.status = "active";
+      }
+      data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "installment_pay", title: (lang === "ar" ? `تحصيل قسط (${ins.paidCount}/${ins.totalCount}) — ` : `Installment paid — `) + ins.customerName, amount: ins.installmentAmount, actor: "user", customerPhone: ins.customerPhone });
+      saveData();
+      notify(lang === "ar" ? "تم تحصيل القسط بنجاح" : "Installment collected", "success");
+    }
+
+    function deferInstallmentStep(id) {
+      const ins = data.installments.find((x) => x.id === id);
+      if (!ins) return;
+      ins.nextDueDate = daysFromNowStr(7);
+      ins.status = "active";
+      saveData();
+      notify(lang === "ar" ? "تم تأجيل القسط 7 أيام بمرونة للحفاظ على العميل" : "Deferred 7 days flexibly", "info");
+    }
+
+    function deleteInstallment(id) {
+      if (!confirm(lang === "ar" ? "حذف خطة الأقساط؟" : "Delete installment?")) return;
+      data.installments = data.installments.filter((x) => x.id !== id);
+      saveData();
+    }
+
+    function saveAssociationForm(e) {
+      e.preventDefault();
+      const name = document.getElementById("g-name").value.trim();
+      const role = document.getElementById("g-role").value;
+      const shareAmount = Math.max(1, parseFloat(document.getElementById("g-share").value) || 100);
+      const totalTurns = Math.max(2, parseInt(document.getElementById("g-turns").value) || 5);
+      const myTurn = Math.min(totalTurns, Math.max(1, parseInt(document.getElementById("g-myturn").value) || 1));
+      const nextDate = document.getElementById("g-date").value || daysFromNowStr(7);
+      if (!name) return;
+      data.associations.unshift({
+        id: "gam_" + Date.now(),
+        name,
+        role,
+        shareAmount,
+        totalTurns,
+        currentTurn: 1,
+        myTurn,
+        nextDate,
+        status: "active"
+      });
+      document.getElementById("g-name").value = "";
+      document.getElementById("g-share").value = "";
+      saveData();
+      notify(lang === "ar" ? "تم تسجيل الجمعية" : "Association saved", "success");
+    }
+
+    function advanceAssociationTurn(id) {
+      const g = data.associations.find((x) => x.id === id);
+      if (!g || g.status !== "active") return;
+      const isPayout = g.currentTurn === g.myTurn;
+      const amt = isPayout ? g.shareAmount * g.totalTurns : g.shareAmount;
+      if (isPayout) {
+        data.emergencyWallet = Math.round((data.emergencyWallet + amt * 0.25) * 100) / 100;
+        data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "assoc_payout", title: (lang === "ar" ? `قبض دور جمعية: ` : `Association payout: `) + g.name, amount: amt, actor: "user" });
+        notify(lang === "ar" ? `مبروك قبض الجمعية (${amt})! تم توجيه 25% تلقائياً لمحفظة الطوارئ.` : "Payout recorded!", "success");
+      } else {
+        data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "assoc_pay", title: (lang === "ar" ? `سداد سهم جمعية (${g.currentTurn}/${g.totalTurns}): ` : `Association share: `) + g.name, amount: amt, actor: "user" });
+        notify(lang === "ar" ? "تم تسجيل سداد سهم الجمعية" : "Share paid", "info");
+      }
+      if (g.currentTurn >= g.totalTurns) {
+        g.status = "completed";
+      } else {
+        g.currentTurn += 1;
+        g.nextDate = daysFromNowStr(30);
+      }
+      saveData();
+    }
+
+    function deleteAssociation(id) {
+      if (!confirm(lang === "ar" ? "حذف الجمعية؟" : "Delete association?")) return;
+      data.associations = data.associations.filter((x) => x.id !== id);
+      saveData();
+    }
+
+    function saveObligationForm(e) {
+      e.preventDefault();
+      const party = document.getElementById("o-party").value.trim();
+      const category = document.getElementById("o-cat").value;
+      const title = document.getElementById("o-title").value.trim();
+      const amount = Math.max(1, parseFloat(document.getElementById("o-amt").value) || 0);
+      const dueDate = document.getElementById("o-date").value || daysFromNowStr(7);
+      if (!party || !title) return;
+      data.obligations.unshift({
+        id: "ob_" + Date.now(),
+        party,
+        category,
+        title,
+        amount,
+        dueDate,
+        paid: false
+      });
+      ["o-party", "o-title", "o-amt"].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ""; });
+      saveData();
+      notify(lang === "ar" ? "تم تسجيل الالتزام / المصروف" : "Obligation saved", "success");
+    }
+
+    function toggleObligationPaid(id) {
+      const o = data.obligations.find((x) => x.id === id);
+      if (!o) return;
+      o.paid = !o.paid;
+      if (o.paid) {
+        data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "obligation_paid", title: (lang === "ar" ? `سداد التزام (${o.party}): ` : `Paid obligation: `) + o.title, amount: o.amount, actor: "user" });
+      }
+      saveData();
+    }
+
+    function deleteObligation(id) {
+      if (!confirm(lang === "ar" ? "حذف هذا البند؟" : "Delete item?")) return;
+      data.obligations = data.obligations.filter((x) => x.id !== id);
+      saveData();
+    }
+
+    function openScannerModal() {
+      showModal(`
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="font-bold text-emerald-400">📷 ${lang === "ar" ? "مسح الفاتورة بالذكاء الاصطناعي" : "AI Invoice Scanner"}</h3>
+          <button onclick="closeModal()" class="text-slate-400">✕</button>
+        </div>
+        <p class="text-xs text-slate-400">${lang === "ar" ? "ارفع صورة فاتورة المشتريات لاستخراج الأصناف والأسعار تلقائياً." : "Upload an invoice image to extract items automatically."}</p>
+        <input type="file" accept="image/*" onchange="handleScanFile(event)" class="w-full text-xs text-slate-300" />
+        <div id="scan-status" class="text-xs text-teal-300"></div>
+      `);
+    }
+
+    function handleScanFile(ev) {
+      const file = ev.target.files?.[0];
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = async () => {
+        const st = document.getElementById("scan-status");
+        st.textContent = lang === "ar" ? "⏳ جاري تحليل الفاتورة..." : "⏳ Scanning invoice...";
+        const apiKey = localStorage.getItem(AI_KEY_STORAGE) || "";
+        const provider = localStorage.getItem(AI_PROVIDER_KEY) || "hybrid";
+        try {
+          if (provider === "gemini" && apiKey) {
+            const b64 = String(r.result).split(",")[1];
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [
+                  { text: 'Extract invoice items as JSON array: [{"name":"...","unit":"كرتونة","qty":1,"buy":10,"sell":12,"wholesale":11}]. Return ONLY valid JSON.' },
+                  { inline_data: { mime_type: file.type, data: b64 } }
+                ]}]
+              })
+            });
+            const j = await resp.json();
+            const raw = j.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+            const cleaned = raw.replace(/```json|```/g, "").trim();
+            const items = JSON.parse(cleaned);
+            items.forEach((s) => {
+              const qty = Number(s.qty) || 1;
+              const buy = Number(s.buy) || 0;
+              recordPurchaseEntry({
+                supplier: "فاتورة ممسوحة AI",
+                itemName: s.name,
+                qty,
+                unitCost: buy,
+                totalAmount: buy * qty,
+                paymentType: "cash",
+                actor: "ai"
+              });
+            });
+            closeModal(); saveData();
+            return notify(lang === "ar" ? `تم استيراد ${items.length} أصناف من الفاتورة وتحديث المشتريات!` : `Imported ${items.length} items!`, "success");
+          }
+          recordPurchaseEntry({ supplier: "فاتورة ممسوحة", itemName: "صنف مستخرج من الفاتورة", qty: 10, unitCost: 40, totalAmount: 400, paymentType: "cash", actor: "ai" });
+          closeModal(); saveData();
+          notify(lang === "ar" ? "تمت إضافة الصنف والمشتريات تجريبياً (أضف مفتاح Gemini في الإعدادات للقراءة البصرية الكاملة)" : "Added sample scanned item", "info");
+        } catch (err) { st.textContent = "❌ " + err.message; }
+      };
+      r.readAsDataURL(file);
+    }
+
+    async function callDirectLlm(prompt) {
+      const apiKey = localStorage.getItem(AI_KEY_STORAGE) || "";
+      const provider = localStorage.getItem(AI_PROVIDER_KEY) || "hybrid";
+      if (!apiKey || provider === "hybrid") return null;
+
+      if (provider === "gemini") {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error?.message || "Gemini API Error");
+        return j.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      }
+
+      if (provider === "openai") {
+        const baseUrl = apiKey.startsWith("gsk_") ? "https://api.groq.com/openai/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
+        const model = apiKey.startsWith("gsk_") ? "llama-3.3-70b-versatile" : "gpt-4o-mini";
+        const res = await fetch(baseUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+          body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }] })
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error?.message || "OpenAI/Groq API Error");
+        return j.choices?.[0]?.message?.content || "";
+      }
+      return null;
+    }
+
+    function setAiError(msg) {
+      const el = document.getElementById("ai-error");
+      if (!msg) { el.classList.add("hidden"); return; }
+      el.innerHTML = `<span>⚠️ ${esc(msg)}</span><button onclick="setAiError(null)">✕</button>`;
+      el.classList.remove("hidden");
+    }
+
+    async function runSmartAudit() {
+      setAiError(null);
+      document.getElementById("ai-loading").classList.remove("hidden");
+      try {
+        const pos = computeFinancialPosition();
+        const cap = computeCapitalMetrics();
+        const guidance = buildMerchantGuidance();
+        const highRisk = data.customers.filter((c) => c.status === "red" || c.status === "yellow");
+        lastAlerts = highRisk.map((c) => ({
+          phone: c.phone,
+          customerName: c.name,
+          debt: c.debt,
+          actionRecommended: lang === "ar"
+            ? (c.creditScore >= 55
+                ? `جدارته (${c.creditScore}/100) تسمح بالتسوية المرنة: اطلب سداد جزء أو حوّل الرصيد لأقساط بدل التجميد حتى لا تخسره.`
+                : `متأخر أو تجاوز السقف (${c.debt}/${c.limit}) — يُوصى بجدولة أقساط ميسرة وتذكير ودي.`)
+            : `Flexible retention alert (Score ${c.creditScore}/100)`,
+          whatsappDraft: buildSmartWaMessage(c)
+        }));
+
+        const localGuidanceText = guidance.map((g, idx) => `${idx + 1}. ${g.title}: ${g.text}`).join("\n");
+        let summary = lang === "ar"
+          ? `تقرير التوجيه الذكي (${SEGMENT_CONFIG[segment]?.arLabel || segment}): رأس المال الأساسي ${cap.baseCapital} ج.م، العائد ${cap.returnCapital} ج.م، المشتريات ${cap.purchases} ج.م، المبيعات ${cap.sales} ج.م، والربح ${cap.profit} ج.م | لك ${pos.receivables} وعليك ${pos.payables} (الصافي: ${pos.netPosition}).\n\n${localGuidanceText}`
+          : `Smart Guidance (${segment}): Base Capital ${cap.baseCapital}, Return Capital ${cap.returnCapital}, Purchases ${cap.purchases}, Sales ${cap.sales}, Profit ${cap.profit}.\n\n${localGuidanceText}`;
+
+        const cloudReply = await callDirectLlm(`As an executive retail, warehouse & installment AI advisor, give 3 short bullet instructions in ${lang === "ar" ? "Arabic" : "English"} protecting the merchant's capital, profit, cashflow, and customer retention based on: ${JSON.stringify({ segment, capital: cap, position: pos, customers: data.customers, installments: data.installments, associations: data.associations, obligations: data.obligations, inventory: data.inventory })}`);
+        if (cloudReply) summary = cloudReply;
+
+        const box = document.getElementById("agent-report");
+        box.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-teal-400">✨ ${lang === "ar" ? "تعليمات الذكاء الاصطناعي لصالح التاجر ومستحقاته" : "AI Priority Guidance for Merchant"}</span>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('agent-report').innerText); notify('${lang === "ar" ? "تم نسخ التعليمات" : "Copied"}','success')" class="rounded bg-slate-800 px-2.5 py-1 text-[11px] text-slate-300">📋 ${lang === "ar" ? "نسخ التقرير" : "Copy"}</button>
+          </div>
+          <p class="text-slate-200 whitespace-pre-wrap">${esc(summary)}</p>
+          ${lastAlerts.map((a, idx) => `
+            <div class="rounded-lg border border-slate-800 bg-slate-900 p-2.5 flex flex-wrap justify-between items-center gap-2">
+              <div><strong class="text-white">${esc(a.customerName)}</strong> — <span class="text-rose-400 font-mono">${a.debt}</span><div class="text-slate-400">${esc(a.actionRecommended)}</div></div>
+              <div class="flex gap-1.5">
+                <button onclick="openWaAlert(${idx})" class="rounded bg-teal-600/20 border border-teal-500/40 px-2 py-1 text-teal-300">💬 ${lang === "ar" ? "رسالة ودية" : "Friendly WA"}</button>
+                <button onclick="convertDebtToInstallments('${esc(a.phone)}', 3)" class="rounded bg-blue-600/20 border border-blue-500/40 px-2 py-1 text-blue-300">📅 ${lang === "ar" ? "تقسيط مرن" : "Installments"}</button>
+              </div>
+            </div>
+          `).join("")}
+        `;
+        box.classList.remove("hidden");
+      } catch (e) { setAiError(e.message); }
+      finally { document.getElementById("ai-loading").classList.add("hidden"); }
+    }
+
+    function executeLocalCopilot(msg) {
+      const actions = [];
+      const text = msg.trim();
+
+      if (/ارشدني|تعليمات|مصلحتي|اعمل ايه|نصيحة|guide|advice/i.test(text)) {
+        const guidance = buildMerchantGuidance();
+        const reply = guidance.map((g, i) => `${i + 1}. [${g.title}] ${g.text}`).join("\n");
+        return { reply, actions };
+      }
+
+      const capMatch = text.match(/(?:ر[اأ]س\s*(?:ال)?م[اأ]ل|capital)\s*(?:بـ|ب|:|=)?\s*(\d+(?:\.\d+)?)/i);
+      if (capMatch) {
+        const val = parseFloat(capMatch[1]);
+        data.baseCapital = Math.round(val * 10) / 10;
+        data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "capital_update", title: `تحديث رأس المال الأساسي بأمر ذكي`, amount: data.baseCapital, actor: "ai" });
+        saveData();
+        const cap = computeCapitalMetrics();
+        actions.push(`تم ضبط رأس المال الأساسي على ${data.baseCapital}`);
+        return { reply: `تم تحديث رأس المال الأساسي إلى ${data.baseCapital}. أصبح رأس المال العائد حالياً ${cap.returnCapital}.`, actions };
+      }
+
+      const purMatch = text.match(/(?:سجل\s*)?(?:شراء|مشتريات|اشتريت)\s+([^\d]+?)\s+(\d+(?:\.\d+)?)(?:\s*(?:آجل|اجل))?/i);
+      if (purMatch && !/عميل|مصروف|التزام|مورد/i.test(purMatch[1])) {
+        const itemName = purMatch[1].trim();
+        const amt = parseFloat(purMatch[2]);
+        const isCredit = /آجل|اجل/i.test(text);
+        if (itemName && amt > 0) {
+          recordPurchaseEntry({
+            supplier: isCredit ? "مورد آجل" : "شراء نقدي",
+            itemName,
+            qty: 1,
+            totalAmount: amt,
+            paymentType: isCredit ? "credit" : "cash",
+            actor: "ai"
+          });
+          actions.push(`تم تسجيل شراء "${itemName}" بقيمة ${amt} وتحديث المخزون والمشتريات`);
+          return { reply: `تم تسجيل شراء "${itemName}" بقيمة ${amt} ضمن المشتريات وإضافته للمخزون${isCredit ? " وضمن التزامات الموردين" : ""}.`, actions };
+        }
+      }
+
+      const addMatch = text.match(/(?:سجل|اضف|أضف)\s*(?:عميل)?\s*([^\d]+?)\s*(01\d{8,9})(?:.*?(?:عليه|دين|بـ|ب)\s*(\d+(?:\.\d+)?))?/i);
+      if (addMatch) {
+        const name = addMatch[1].trim();
+        const phone = addMatch[2].trim();
+        const debt = parseFloat(addMatch[3] || "0");
+        data.customers.unshift({ phone, name, debt, limit: 100, graceDays: 10, debtStartDate: debt > 0 ? todayStr() : undefined, frozen: false });
+        data.transactions.unshift({ id: String(Date.now()), timestamp: nowTime(), type: "debt_added", title: `تسجيل عميل: ${name}`, amount: debt, actor: "ai", customerPhone: phone });
+        saveData();
+        actions.push(`تم تسجيل العميل "${name}" (${phone}) برصيد ${debt}`);
+        return { reply: `تم تنفيذ طلبك بنجاح وإضافة ${name} إلى سجل الائتمان.`, actions };
+      }
+
+      const payMatch = text.match(/(?:دفع|سداد|سدد)\s*([^\d]+?)\s*(\d+(?:\.\d+)?)/i) || text.match(/([^\d]+?)\s*(?:دفع|سدد)\s*(\d+(?:\.\d+)?)/i);
+      if (payMatch) {
+        const target = payMatch[1].replace(/خلي|العميل/g, "").trim();
+        const amt = parseFloat(payMatch[2]);
+        const cust = data.customers.find((c) => c.name.includes(target));
+        if (cust && amt > 0) {
+          moneyAction(cust.phone, amt, "pay", "ai");
+          actions.push(`تم خصم ${amt} من مديونية ${cust.name}`);
+          return { reply: `تم تسجيل سداد بقيمة ${amt} للعميل ${cust.name}. رصيده الحالي: ${cust.debt}.`, actions };
+        }
+      }
+
+      const instMatch = text.match(/قسط\s*(?:لـ|ل)?\s*([^\d]+?)\s*(\d+(?:\.\d+)?)\s*(?:على|في)\s*(\d+)/i);
+      if (instMatch) {
+        const target = instMatch[1].trim();
+        const totalAmt = parseFloat(instMatch[2]);
+        const count = Math.max(2, parseInt(instMatch[3]));
+        const cust = data.customers.find((c) => c.name.includes(target));
+        if (cust && totalAmt > 0) {
+          const per = Math.round((totalAmt / count) * 100) / 100;
+          data.installments.unshift({ id: "ins_" + Date.now(), customerPhone: cust.phone, customerName: cust.name, title: "تقسيط بأمر ذكي", totalAmount: totalAmt, installmentAmount: per, totalCount: count, paidCount: 0, nextDueDate: daysFromNowStr(7), status: "active" });
+          data.totalSales = Math.round((data.totalSales + totalAmt) * 10) / 10;
+          saveData();
+          actions.push(`تم إنشاء ${count} أقساط بقيمة ${per} للعميل ${cust.name}`);
+          return { reply: `تمت جدولة مبلغ ${totalAmt} على ${count} أقساط للعميل ${cust.name} للحفاظ على استمرارية التعامل.`, actions };
+        }
+      }
+
+      const expMatch = text.match(/(?:سجل|اضف|أضف)\s*(?:مصروف|التزام|مورد)\s*([^\d]+?)\s*(\d+(?:\.\d+)?)/i);
+      if (expMatch) {
+        const title = expMatch[1].trim();
+        const amount = parseFloat(expMatch[2]);
+        if (title && amount > 0) {
+          data.obligations.unshift({ id: "ob_" + Date.now(), party: title, category: "expense", title, amount, dueDate: todayStr(), paid: false });
+          saveData();
+          actions.push(`تم تسجيل التزام/مصروف "${title}" بقيمة ${amount}`);
+          return { reply: `تمت إضافة "${title}" (${amount}) ضمن بند (عليك فلوس) وتحديث صافي موقفك المالي.`, actions };
+        }
+      }
+
+      if (/متأخر|خطر|overdue|risk/i.test(text)) {
+        const risky = data.customers.filter((c) => c.status === "red" || c.status === "yellow");
+        if (!risky.length) return { reply: "جميع العملاء ملتزمون حالياً ولا توجد حالات خطر.", actions };
+        const lines = risky.map((c) => `• ${c.name}: دين ${c.debt}/${c.limit} (جدارة ${c.creditScore}/100) — مقترح: ${c.creditScore >= 55 ? "سداد جزئي أو تقسيط مرن" : "جدولة وتذكير ودي"}`).join("\n");
+        return { reply: `العملاء ذوو الأولوية في المتابعة:\n${lines}`, actions };
+      }
+
+      if (/لخص|ملخص|ارباح|أرباح|وضع|فلوس|رأس المال|راس المال|مشتريات|مبيعات|summary|profit|capital/i.test(text)) {
+        const pos = computeFinancialPosition();
+        const cap = computeCapitalMetrics();
+        return {
+          reply: `الملخص المالي ورأس المال:\n• رأس المال الأساسي: ${cap.baseCapital} | رأس المال العائد: ${cap.returnCapital}\n• المشتريات: ${cap.purchases} | المبيعات: ${cap.sales} | الربح: ${cap.profit}\n• ليك فلوس (عملاء + أقساط): ${pos.receivables}\n• عليك فلوس (موردين + مصروفات + جمعيات): ${pos.payables}\n• صافي الموقف المالي: ${pos.netPosition}`,
+          actions
+        };
+      }
+
+      return null;
+    }
+
+    async function sendCopilot(msg) {
+      if (!msg.trim()) return;
+      setAiError(null);
+      chatHistory.push({ role: "user", text: msg, timestamp: nowTime() });
+      renderChat();
+      document.getElementById("ai-loading").classList.remove("hidden");
+      try {
+        const localRes = executeLocalCopilot(msg);
+        if (localRes) {
+          chatHistory.push({ role: "model", text: localRes.reply, timestamp: nowTime(), actions: localRes.actions });
+          renderChat();
+          return;
+        }
+        const pos = computeFinancialPosition();
+        const cap = computeCapitalMetrics();
+        const cloudReply = await callDirectLlm(`You are an executive assistant for a credit, installments, associations, capital, and warehouse system. Reply concisely in ${lang === "ar" ? "Arabic" : "English"} to: "${msg}". Current state: ${JSON.stringify({ segment, capital: cap, position: pos, customers: data.customers, installments: data.installments, associations: data.associations, obligations: data.obligations, inventory: data.inventory })}`);
+        if (cloudReply) {
+          chatHistory.push({ role: "model", text: cloudReply, timestamp: nowTime(), actions: [] });
+        } else {
+          chatHistory.push({
+            role: "model",
+            text: lang === "ar"
+              ? 'جرّب أوامر مثل: "ارشدني لمصلحتي"، "راس المال 5000"، "سجل شراء زيت 650"، "قسط لمحمود 60 على 3"، أو "لخص الوضع المالي".'
+              : 'Try: "Give me advice", "Capital 5000", "Buy oil 650", or add a Gemini/OpenAI key in Settings.',
+            timestamp: nowTime(),
+            actions: []
+          });
+        }
+        renderChat();
+      } catch (e) { setAiError(e.message); }
+      finally { document.getElementById("ai-loading").classList.add("hidden"); }
+    }
+
+    function sendPromptIdx(idx) {
+      if (currentPrompts[idx]) sendCopilot(currentPrompts[idx]);
+    }
+
+    function handleCopilotSubmit(e) {
+      e.preventDefault();
+      const inp = document.getElementById("copilot-input");
+      const val = inp.value.trim();
+      if (val) { inp.value = ""; sendCopilot(val); }
+    }
+
+    function toggleVoice() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) return notify(lang === "ar" ? "الإدخال الصوتي غير مدعوم هنا" : "Voice not supported", "info");
+      if (listening && recognition) { recognition.stop(); listening = false; return; }
+      recognition = new SR();
+      recognition.lang = lang === "ar" ? "ar-EG" : "en-US";
+      recognition.onresult = (ev) => { const t = ev.results?.[0]?.[0]?.transcript; if (t) sendCopilot(t); };
+      recognition.onend = () => { listening = false; };
+      listening = true; recognition.start();
+    }
+
+    function renderChat() {
+      const log = document.getElementById("chat-log");
+      if (chatHistory.length === 0) { log.classList.add("hidden"); return; }
+      log.classList.remove("hidden");
+      log.innerHTML = chatHistory.map((m) => `
+        <div class="rounded-lg p-3 ${m.role === "user" ? "border border-emerald-500/30 bg-emerald-950/30 text-emerald-100" : "border border-slate-800 bg-slate-900 text-slate-200"}">
+          <div class="flex justify-between text-[11px] font-bold text-slate-400 mb-1">
+            <span>${m.role === "user" ? (lang === "ar" ? "أنت" : "You") : (lang === "ar" ? "المساعد الذكي" : "Copilot")}</span>
+            <span class="font-mono">${esc(m.timestamp)}</span>
+          </div>
+          ${(m.actions || []).map((a) => `<div class="text-emerald-400 font-bold mb-1">✅ ${esc(a)}</div>`).join("")}
+          <div class="whitespace-pre-wrap">${esc(m.text)}</div>
+        </div>
+      `).join("");
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function addReq(e) {
+      e.preventDefault();
+      const v = document.getElementById("req-inp").value.trim();
+      if (!v) return;
+      const ex = data.requests.find((r) => r.name.toLowerCase() === v.toLowerCase());
+      if (ex) ex.count++; else data.requests.unshift({ name: v, count: 1 });
+      saveData();
+    }
+
+    function deleteReq(idx) {
+      data.requests.splice(idx, 1);
+      saveData();
+    }
+
+    function renderAll() {
+      const cur = lang === "ar" ? "ج.م" : "EGP";
+      const pos = computeFinancialPosition();
+      const cap = computeCapitalMetrics();
+      const totalDebt = pos.customerDebt;
+      const totalLimit = data.customers.reduce((s, c) => s + c.limit, 0);
+      const safe = data.customers.filter((c) => c.status !== "red" && !c.frozen).length;
+      const rate = data.customers.length === 0 ? 100 : Math.max(0, Math.min(100, Math.round(((safe / data.customers.length) * 0.6 + (totalLimit > 0 ? Math.max(0, 1 - totalDebt / (totalLimit * 1.2)) : 1) * 0.4) * 100)));
+      const expProfit = data.inventory.reduce((s, i) => s + Math.max(0, i.sell - i.buy) * i.qty, 0);
+      const healthyStock = data.inventory.filter((i) => invStatus(i) === "active").length;
+      const stockHealth = data.inventory.length === 0 ? 100 : Math.round((healthyStock / data.inventory.length) * 100);
+      const healthScore = Math.round(rate * 0.6 + stockHealth * 0.4);
+
+      const prov = localStorage.getItem(AI_PROVIDER_KEY) || "hybrid";
+      const hasKey = !!(localStorage.getItem(AI_KEY_STORAGE) || "").trim();
+      document.getElementById("ai-badge").textContent = prov === "gemini" && hasKey ? "✨ Gemini Cloud Active" : prov === "openai" && hasKey ? "⚡ OpenAI/Groq Active" : (lang === "ar" ? "🛡️ محرك هجين (Offline Ready)" : "🛡️ Hybrid Offline-Ready");
+
+      document.getElementById("btn-lang").textContent = lang === "ar" ? "🌐 EN" : "🌐 عربي";
+      document.getElementById("btn-mode").textContent = viewMode === "pro" ? (lang === "ar" ? "🎛️ الوضع المتقدم" : "🎛️ Pro Mode") : (lang === "ar" ? "✨ الوضع البسيط" : "✨ Simple Mode");
+
+      document.getElementById("segment-buttons").innerHTML = Object.entries(SEGMENT_CONFIG).map(([key, cfg]) => {
+        const active = segment === key;
+        const lbl = lang === "ar" ? cfg.arLabel : cfg.enLabel;
+        return `<button type="button" onclick="setSegment('${key}')" class="rounded-lg px-3 py-1.5 font-bold transition ${active ? "bg-teal-600 text-white shadow" : "bg-slate-900 text-slate-300 border border-slate-700 hover:border-teal-500"}">${lbl}</button>`;
+      }).join("");
+      document.getElementById("segment-desc").textContent = lang === "ar" ? (SEGMENT_CONFIG[segment]?.arDesc || "") : (SEGMENT_CONFIG[segment]?.enDesc || "");
+
+      document.getElementById("capital-strip").innerHTML = `
+        <div onclick="activeTab='capital';renderAll()" class="cursor-pointer rounded-xl border border-indigo-500/30 bg-slate-900 p-3.5 hover:border-indigo-400">
+          <p class="text-[11px] text-indigo-300">${lang === "ar" ? "🏦 رأس المال الأساسي" : "🏦 Base Capital"}</p>
+          <p class="font-mono text-xl font-extrabold text-indigo-400 mt-1">${cap.baseCapital} ${cur}</p>
+        </div>
+        <div onclick="activeTab='capital';renderAll()" class="cursor-pointer rounded-xl border border-teal-500/30 bg-slate-900 p-3.5 hover:border-teal-400">
+          <p class="text-[11px] text-teal-300">${lang === "ar" ? "🔄 رأس المال العائد" : "🔄 Return Capital"}</p>
+          <p class="font-mono text-xl font-extrabold text-teal-400 mt-1">${cap.returnCapital} ${cur}</p>
+        </div>
+        <div onclick="activeTab='capital';renderAll()" class="cursor-pointer rounded-xl border border-amber-500/30 bg-slate-900 p-3.5 hover:border-amber-400">
+          <p class="text-[11px] text-amber-300">${lang === "ar" ? "🛒 المشتريات" : "🛒 Purchases"}</p>
+          <p class="font-mono text-xl font-extrabold text-amber-400 mt-1">${cap.purchases} ${cur}</p>
+        </div>
+        <div onclick="activeTab='capital';renderAll()" class="cursor-pointer rounded-xl border border-sky-500/30 bg-slate-900 p-3.5 hover:border-sky-400">
+          <p class="text-[11px] text-sky-300">${lang === "ar" ? "🏷️ المبيعات" : "🏷️ Sales"}</p>
+          <p class="font-mono text-xl font-extrabold text-sky-400 mt-1">${cap.sales} ${cur}</p>
+        </div>
+        <div onclick="activeTab='capital';renderAll()" class="cursor-pointer col-span-2 sm:col-span-1 rounded-xl border border-emerald-500/30 bg-slate-900 p-3.5 hover:border-emerald-400">
+          <p class="text-[11px] text-emerald-300">${lang === "ar" ? "📈 الربح المحقق" : "📈 Realized Profit"}</p>
+          <p class="font-mono text-xl font-extrabold text-emerald-400 mt-1">${cap.profit} ${cur}</p>
+        </div>
+      `;
+
+      document.getElementById("kpi-row").innerHTML = `
+        <div class="rounded-xl border border-slate-800 bg-slate-900 p-4">
+          <p class="text-xs text-slate-400">${lang === "ar" ? "مؤشر صحة المشروع" : "Business Health"}</p>
+          <p class="font-mono text-2xl font-extrabold ${healthScore >= 75 ? "text-emerald-400" : healthScore >= 50 ? "text-amber-400" : "text-rose-400"} mt-1">${healthScore}%</p>
+        </div>
+        <div class="rounded-xl border border-emerald-500/30 bg-slate-900 p-4">
+          <p class="text-xs text-emerald-300">${lang === "ar" ? "🟢 ليك فلوس (عملاء + أقساط)" : "🟢 Receivables (Owed to You)"}</p>
+          <p class="font-mono text-2xl font-extrabold text-emerald-400 mt-1">${pos.receivables} ${cur}</p>
+        </div>
+        <div class="rounded-xl border border-rose-500/30 bg-slate-900 p-4">
+          <p class="text-xs text-rose-300">${lang === "ar" ? "🔴 عليك فلوس (موردين + التزامات)" : "🔴 Payables (You Owe)"}</p>
+          <p class="font-mono text-2xl font-extrabold text-rose-400 mt-1">${pos.payables} ${cur}</p>
+        </div>
+        <div class="rounded-xl border border-slate-800 bg-slate-900 p-4">
+          <p class="text-xs text-slate-400">${lang === "ar" ? "⚖️ صافي موقفك المالي" : "⚖️ Net Financial Position"}</p>
+          <p class="font-mono text-2xl font-extrabold ${pos.netPosition >= 0 ? "text-teal-400" : "text-amber-400"} mt-1">${pos.netPosition} ${cur}</p>
+        </div>
+        <div class="rounded-xl border border-slate-800 bg-slate-900 p-4">
+          <p class="text-xs text-slate-400">${lang === "ar" ? "🏭 رأس مال المخزن" : "🏭 Inventory Value"}</p>
+          <p class="font-mono text-2xl font-extrabold text-blue-400 mt-1">${pos.stockValue} ${cur}</p>
+        </div>
+      `;
+
+      const guidance = buildMerchantGuidance();
+      document.getElementById("merchant-guidance-strip").innerHTML = `
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <span class="font-bold text-amber-300">🧭 ${lang === "ar" ? "توجيهات الذكاء الاصطناعي لصالحك الآن:" : "AI Priority Guidance for You:"}</span>
+          <span class="text-[11px] text-slate-400">${lang === "ar" ? "مُحدّث تلقائياً حسب رأس المال والمشتريات والديون والالتزامات" : "Auto-updated from live capital, purchases & debt data"}</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+          ${guidance.slice(0, 2).map((g) => `
+            <div class="rounded-lg border border-slate-800 bg-slate-950/80 p-2.5 flex justify-between items-start gap-2">
+              <div>
+                <div class="font-bold ${g.priority === "high" ? "text-rose-300" : g.priority === "good" ? "text-emerald-300" : "text-amber-300"}">${esc(g.title)}</div>
+                <div class="text-slate-300 mt-0.5 leading-relaxed">${esc(g.text)}</div>
+              </div>
+              <button onclick="${g.actionFn}" class="shrink-0 rounded-lg bg-slate-800 hover:bg-emerald-600 px-2.5 py-1.5 font-bold text-white">${esc(g.actionLabel)}</button>
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      currentPrompts = lang === "ar"
+        ? ["ارشدني لمصلحتي ومستحقاتي اليوم", "راس المال 5000", "سجل شراء زيت 650", "لخص الوضع المالي (ليه وعليه)"]
+        : ["Give me priority advice today", "Capital 5000", "Buy oil 650", "Summarize receivables and payables"];
+      document.getElementById("quick-prompts").innerHTML = currentPrompts.map((p, idx) =>
+        `<button onclick="sendPromptIdx(${idx})" class="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-1.5 text-xs text-slate-300 hover:border-emerald-500">${esc(p)}</button>`
+      ).join("");
+
+      const allTabsMeta = [
+        { id: "capital", lbl: lang === "ar" ? "💰 رأس المال والمشتريات" : "💰 Capital & Purchases" },
+        { id: "customers", lbl: lang === "ar" ? "👥 العملاء والائتمان" : "👥 Customers" },
+        { id: "installments", lbl: lang === "ar" ? "📅 الأقساط المرنة" : "📅 Installments" },
+        { id: "associations", lbl: lang === "ar" ? "🤝 الجمعيات" : "🤝 Associations" },
+        { id: "inventory", lbl: lang === "ar" ? "🏭 المخازن والبضاعة" : "🏭 Warehouse & Stock" },
+        { id: "obligations", lbl: lang === "ar" ? "⚖️ ليه وعليه فلوس" : "⚖️ Receivables/Payables" },
+        { id: "accounting", lbl: lang === "ar" ? "📊 المحاسبة والمحاكاة" : "📊 Accounting & Sim" },
+        { id: "advisor", lbl: lang === "ar" ? "💡 مستشار البضاعة" : "💡 Advisor" },
+        { id: "privacy", lbl: lang === "ar" ? "🛡️ درع الحوكمة" : "🛡️ Privacy" }
+      ];
+      const allowedTabIds = getAllowedTabsForCurrentView();
+      const visibleTabs = allTabsMeta.filter((t) => allowedTabIds.includes(t.id));
+      document.getElementById("tabs-nav").innerHTML = visibleTabs.map((tb) =>
+        `<button onclick="activeTab='${tb.id}';renderAll()" class="flex-1 min-w-[125px] rounded-xl px-3 py-2.5 text-xs font-bold ${activeTab === tb.id ? "bg-emerald-600 text-white" : "text-slate-400 hover:bg-slate-800"}">${tb.lbl}</button>`
+      ).join("");
+
+      const body = document.getElementById("tab-content");
+      if (activeTab === "capital") {
+        body.innerHTML = `
+          <div class="space-y-5 text-xs">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <form onsubmit="updateBaseCapitalForm(event)" class="no-print rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-3">
+                <h3 class="font-bold text-sm text-indigo-300">🏦 ${lang === "ar" ? "تعديل رأس المال الأساسي" : "Update Base Capital"}</h3>
+                <p class="text-slate-400">${lang === "ar" ? "أدخل رأس المال الأساسي المخصص للنشاط لحساب رأس المال العائد بدقة." : "Set base capital to compute return capital accurately."}</p>
+                <input id="cap-base-inp" type="number" step="0.5" min="0" value="${cap.baseCapital}" required class="font-mono w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                <button type="submit" class="w-full rounded-xl bg-indigo-600 px-4 py-2 font-bold text-white hover:bg-indigo-500">${lang === "ar" ? "حفظ رأس المال الأساسي" : "Save Base Capital"}</button>
+              </form>
+
+              <form onsubmit="savePurchaseForm(event)" class="no-print md:col-span-2 rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-3">
+                <h3 class="font-bold text-sm text-amber-300">🛒 ${lang === "ar" ? "تسجيل فاتورة مشتريات (ترتبط بالمخزون والتزامات الموردين)" : "Record Purchase Invoice"}</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-5 gap-2.5">
+                  <input id="pur-supplier" placeholder="${lang === "ar" ? "اسم المورد" : "Supplier"}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                  <input id="pur-item" required placeholder="${lang === "ar" ? "الصنف المشترى" : "Item Name"}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                  <input id="pur-qty" type="number" min="1" value="1" required placeholder="${lang === "ar" ? "الكمية" : "Qty"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                  <input id="pur-total" type="number" step="0.5" min="0.5" required placeholder="${lang === "ar" ? "إجمالي الفاتورة" : "Total Cost"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                  <select id="pur-type" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white">
+                    <option value="cash">${lang === "ar" ? "نقدي" : "Cash"}</option>
+                    <option value="credit">${lang === "ar" ? "آجل (يضاف لـ عليك فلوس)" : "Credit (Add Payable)"}</option>
+                  </select>
+                </div>
+                <div class="flex justify-end">
+                  <button type="submit" class="rounded-xl bg-amber-600 px-5 py-2 font-bold text-white hover:bg-amber-500">${lang === "ar" ? "تسجيل الشراء وتحديث المخزن" : "Record Purchase"}</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 overflow-x-auto">
+              <h3 class="font-bold text-sm text-teal-300 mb-3">🧾 ${lang === "ar" ? "سجل فواتير المشتريات المرتبطة بالمخزون" : "Purchases Log Linked to Inventory"}</h3>
+              <table class="w-full">
+                <thead><tr class="border-b border-slate-800 text-slate-400">
+                  <th class="py-2 text-start">${lang === "ar" ? "التاريخ" : "Date"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "المورد" : "Supplier"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الصنف والكمية" : "Item & Qty"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الإجمالي" : "Total"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "السداد" : "Payment"}</th>
+                </tr></thead>
+                <tbody class="divide-y divide-slate-800">
+                  ${data.purchasesLog.length ? data.purchasesLog.map((p) => `
+                    <tr>
+                      <td class="py-2.5 font-mono text-slate-400">${esc(p.date)}</td>
+                      <td class="py-2.5 font-bold">${esc(p.supplier)}</td>
+                      <td class="py-2.5">${esc(p.itemName)} <span class="font-mono text-blue-300">(${p.qty} × ${p.unitCost})</span></td>
+                      <td class="py-2.5 font-mono text-amber-400 font-bold">${p.total} ${cur}</td>
+                      <td class="py-2.5"><span class="rounded px-2 py-0.5 font-bold ${p.paymentType === "credit" ? "bg-rose-500/20 text-rose-300" : "bg-emerald-500/20 text-emerald-300"}">${p.paymentType === "credit" ? (lang === "ar" ? "آجل" : "Credit") : (lang === "ar" ? "نقدي" : "Cash")}</span></td>
+                    </tr>`).join("") : `<tr><td colspan="5" class="py-4 text-center text-slate-500">${lang === "ar" ? "لا توجد فواتير مشتريات مسجلة بعد" : "No purchase invoices yet"}</td></tr>`}
+                </tbody>
+              </table>
+            </div>
+          </div>`;
+      } else if (activeTab === "customers") {
+        const list = data.customers.filter((c) => (!custSearch || c.name.includes(custSearch) || c.phone.includes(custSearch)) && (custFilter === "all" || c.status === custFilter));
+        body.innerHTML = `
+          <div class="space-y-5">
+            <form onsubmit="saveCustomerForm(event)" class="no-print rounded-2xl border border-slate-800 bg-slate-900 p-5 grid grid-cols-1 gap-3 sm:grid-cols-5 text-xs">
+              <input id="c-phone" required placeholder="${lang === "ar" ? "رقم الهاتف" : "Phone"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="c-name" required placeholder="${lang === "ar" ? "اسم العميل" : "Name"}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="c-debt" type="number" step="0.5" placeholder="${lang === "ar" ? "الدين" : "Debt"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="c-limit" type="number" value="100" required placeholder="${lang === "ar" ? "السقف" : "Limit"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white hover:bg-emerald-500">${lang === "ar" ? "حفظ العميل" : "Save"}</button>
+            </form>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-4">
+              <div class="flex flex-wrap justify-between items-center gap-2 text-xs">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-amber-300 font-bold">💼 ${lang === "ar" ? "محفظة الطوارئ:" : "Emergency Wallet:"} ${data.emergencyWallet.toFixed(1)} ${cur}</span>
+                  <div class="no-print flex gap-1">
+                    ${["all", "red", "yellow", "green"].map((f) => `<button onclick="custFilter='${f}';renderAll()" class="rounded-lg px-2.5 py-1 font-bold ${custFilter === f ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300"}">${f === "all" ? (lang === "ar" ? "الكل" : "All") : f === "red" ? "🔴" : f === "yellow" ? "🟡" : "🟢"}</button>`).join("")}
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <input value="${esc(custSearch)}" oninput="custSearch=this.value;renderAll()" placeholder="${lang === "ar" ? "بحث بالاسم أو الرقم..." : "Search..."}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-white" />
+                  <button onclick="window.print()" class="no-print rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 font-semibold">🖨️ PDF</button>
+                </div>
+              </div>
+              <div class="overflow-x-auto"><table class="w-full text-xs">
+                <thead><tr class="border-b border-slate-800 text-slate-400">
+                  <th class="py-2 text-start">${lang === "ar" ? "الهاتف" : "Phone"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الاسم (اضغط للتسوية والكشف)" : "Name"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الدين/السقف" : "Debt/Limit"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الجدارة" : "Score"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "المهلة" : "Days"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "المخاطر" : "Risk"}</th>
+                  <th class="no-print py-2 text-start">${lang === "ar" ? "إجراءات مرنة" : "Flexible Actions"}</th>
+                </tr></thead>
+                <tbody class="divide-y divide-slate-800">
+                  ${list.map((c) => `
+                    <tr>
+                      <td class="py-2.5 font-mono">${esc(maskPhone(c.phone))}</td>
+                      <td class="py-2.5 font-bold"><button onclick="openCustomerStatement('${esc(c.phone)}')" class="text-start hover:text-emerald-400 underline decoration-slate-700">${esc(c.name)}</button></td>
+                      <td class="py-2.5 font-mono">${c.debt} / ${c.limit}</td>
+                      <td class="py-2.5 font-mono"><span class="font-bold ${c.creditScore >= 75 ? "text-emerald-400" : c.creditScore >= 50 ? "text-amber-400" : "text-rose-400"}">${c.creditScore}</span>/100</td>
+                      <td class="py-2.5 font-mono">${c.daysLeft}</td>
+                      <td class="py-2.5"><span class="rounded px-2 py-0.5 font-bold ${c.status === "red" ? "bg-rose-500/20 text-rose-300" : c.status === "yellow" ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"}">${c.status}</span></td>
+                      <td class="no-print py-2.5 flex flex-wrap gap-1">
+                        <button onclick="moneyAction('${esc(c.phone)}',25,'pay')" class="rounded bg-emerald-600/20 px-2 py-1 text-emerald-300">-25</button>
+                        <button onclick="moneyAction('${esc(c.phone)}',${c.debt},'pay')" class="rounded bg-blue-600/20 px-2 py-1 text-blue-300">${lang === "ar" ? "كامل" : "Full"}</button>
+                        <button onclick="openCustomPay('${esc(c.phone)}','pay')" class="rounded bg-slate-800 px-2 py-1">${lang === "ar" ? "مخصص" : "Custom"}</button>
+                        ${c.debt > 0 ? `<button onclick="convertDebtToInstallments('${esc(c.phone)}',3)" class="rounded bg-purple-600/20 px-2 py-1 text-purple-300" title="تقسيط مرن لحفظ الزبون">📅 ${lang === "ar" ? "قسط" : "Plan"}</button>` : ""}
+                        <button onclick="openCustomPay('${esc(c.phone)}','add_debt')" class="rounded bg-amber-600/20 px-2 py-1 text-amber-300">+${lang === "ar" ? "دين" : "Debt"}</button>
+                        <button onclick="openWaModal('${esc(c.phone)}')" class="rounded bg-teal-600/20 px-2 py-1 text-teal-300">💬</button>
+                        <button onclick="toggleFreeze('${esc(c.phone)}')" class="rounded bg-rose-600/20 px-2 py-1 text-rose-300">${c.frozen ? "🔓" : "❄️"}</button>
+                        <button onclick="deleteCustomer('${esc(c.phone)}')" class="rounded px-2 py-1 text-rose-400">🗑️</button>
+                      </td>
+                    </tr>`).join("")}
+                </tbody>
+              </table></div>
+            </div>
+          </div>`;
+      } else if (activeTab === "installments") {
+        const custOpts = data.customers.map((c) => `<option value="${esc(c.phone)}">${esc(c.name)} (${esc(c.phone)})</option>`).join("");
+        body.innerHTML = `
+          <div class="space-y-5 text-xs">
+            <form onsubmit="saveInstallmentForm(event)" class="no-print rounded-2xl border border-slate-800 bg-slate-900 p-5 grid grid-cols-1 gap-3 sm:grid-cols-6">
+              <select id="ins-cust" required class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"><option value="">${lang === "ar" ? "اختر العميل..." : "Select Customer..."}</option>${custOpts}</select>
+              <input id="ins-title" required placeholder="${lang === "ar" ? "بيان التقسيط (مثال: بضاعة أسبوع)" : "Installment Title"}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="ins-total" type="number" step="0.5" required placeholder="${lang === "ar" ? "إجمالي المبلغ" : "Total Amount"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="ins-count" type="number" min="2" max="24" value="3" required placeholder="${lang === "ar" ? "عدد الأقساط" : "Count"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="ins-date" type="date" value="${daysFromNowStr(7)}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white hover:bg-emerald-500">${lang === "ar" ? "إضافة خطة أقساط" : "Add Plan"}</button>
+            </form>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 overflow-x-auto">
+              <h3 class="font-bold text-sm text-teal-300 mb-3">📅 ${lang === "ar" ? "سجل الأقساط الذكية (تحصيل وتأجيل مرن لحفظ الزبائن)" : "Smart Installments Ledger"}</h3>
+              <table class="w-full">
+                <thead><tr class="border-b border-slate-800 text-slate-400">
+                  <th class="py-2 text-start">${lang === "ar" ? "العميل" : "Customer"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "البيان" : "Title"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "قيمة القسط" : "Installment"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "المسدد" : "Progress"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "القسط القادم" : "Next Due"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "إجراءات" : "Actions"}</th>
+                </tr></thead>
+                <tbody class="divide-y divide-slate-800">
+                  ${data.installments.map((ins) => {
+                    const isOverdue = ins.paidCount < ins.totalCount && ins.nextDueDate <= todayStr();
+                    return `<tr>
+                      <td class="py-2.5 font-bold">${esc(ins.customerName)}</td>
+                      <td class="py-2.5 text-slate-300">${esc(ins.title)}</td>
+                      <td class="py-2.5 font-mono text-emerald-400">${ins.installmentAmount} ${cur}</td>
+                      <td class="py-2.5 font-mono">${ins.paidCount} / ${ins.totalCount} (${ins.totalAmount} ${cur})</td>
+                      <td class="py-2.5 font-mono ${isOverdue ? "text-rose-400 font-bold" : "text-slate-300"}">${esc(ins.nextDueDate)} ${isOverdue ? "⚠️" : ""}</td>
+                      <td class="py-2.5 flex flex-wrap gap-1.5">
+                        ${ins.paidCount < ins.totalCount ? `
+                          <button onclick="payInstallmentStep('${esc(ins.id)}')" class="rounded bg-emerald-600/20 px-2.5 py-1 text-emerald-300 font-bold">✅ ${lang === "ar" ? "تحصيل قسط" : "Collect"}</button>
+                          <button onclick="deferInstallmentStep('${esc(ins.id)}')" class="rounded bg-amber-600/20 px-2.5 py-1 text-amber-300">⏳ ${lang === "ar" ? "ترحيل 7 أيام" : "Defer 7d"}</button>
+                        ` : `<span class="text-emerald-400 font-bold">✔️ ${lang === "ar" ? "مكتمل" : "Done"}</span>`}
+                        <button onclick="openWaModal('${esc(ins.customerPhone)}', '${lang === "ar" ? `مرحباً ${esc(ins.customerName)}، تذكير ودي بموعد قسطك (${ins.installmentAmount} ج.م) بتاريخ ${ins.nextDueDate}.` : `Reminder for installment ${ins.installmentAmount}`}')" class="rounded bg-teal-600/20 px-2 py-1 text-teal-300">💬</button>
+                        <button onclick="deleteInstallment('${esc(ins.id)}')" class="rounded px-2 py-1 text-rose-400">🗑️</button>
+                      </td>
+                    </tr>`;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>`;
+      } else if (activeTab === "associations") {
+        body.innerHTML = `
+          <div class="space-y-5 text-xs">
+            <form onsubmit="saveAssociationForm(event)" class="no-print rounded-2xl border border-slate-800 bg-slate-900 p-5 grid grid-cols-1 gap-3 sm:grid-cols-6">
+              <input id="g-name" required placeholder="${lang === "ar" ? "اسم الجمعية" : "Association Name"}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <select id="g-role" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white">
+                <option value="member">${lang === "ar" ? "مشترك في جمعية" : "Member"}</option>
+                <option value="organizer">${lang === "ar" ? "مدير/منظم الجمعية" : "Organizer"}</option>
+              </select>
+              <input id="g-share" type="number" step="1" required placeholder="${lang === "ar" ? "قيمة السهم" : "Share Amount"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="g-turns" type="number" min="2" value="6" required placeholder="${lang === "ar" ? "عدد الأدوار" : "Turns"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="g-myturn" type="number" min="1" value="3" required placeholder="${lang === "ar" ? "دور قبضك" : "My Turn"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <div class="flex gap-2">
+                <input id="g-date" type="date" value="${daysFromNowStr(7)}" class="font-mono w-full rounded-xl border border-slate-700 bg-slate-950 px-2 py-2 text-white" />
+                <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white shrink-0">+</button>
+              </div>
+            </form>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 overflow-x-auto">
+              <h3 class="font-bold text-sm text-amber-300 mb-3">🤝 ${lang === "ar" ? "إدارة الجمعيات وحماية سيولة النشاط" : "Associations & Cashflow Protection"}</h3>
+              <table class="w-full">
+                <thead><tr class="border-b border-slate-800 text-slate-400">
+                  <th class="py-2 text-start">${lang === "ar" ? "الجمعية" : "Name"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "قيمة السهم" : "Share"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "إجمالي القبض" : "Total Payout"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الدور الحالي / دورك" : "Current / My Turn"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الموعد القادم" : "Next Date"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "إجراء" : "Action"}</th>
+                </tr></thead>
+                <tbody class="divide-y divide-slate-800">
+                  ${data.associations.map((g) => {
+                    const isMyTurn = g.status === "active" && g.currentTurn === g.myTurn;
+                    return `<tr>
+                      <td class="py-2.5 font-bold">${esc(g.name)} <span class="text-slate-400 font-normal">(${g.role === "organizer" ? (lang === "ar" ? "مدير" : "Admin") : (lang === "ar" ? "مشترك" : "Member")})</span></td>
+                      <td class="py-2.5 font-mono">${g.shareAmount} ${cur}</td>
+                      <td class="py-2.5 font-mono text-emerald-400 font-bold">${g.shareAmount * g.totalTurns} ${cur}</td>
+                      <td class="py-2.5 font-mono">${g.currentTurn}/${g.totalTurns} — <span class="${isMyTurn ? "text-amber-300 font-bold" : "text-blue-300"}">${lang === "ar" ? "دورك:" : "Mine:"} #${g.myTurn}</span></td>
+                      <td class="py-2.5 font-mono">${esc(g.nextDate)}</td>
+                      <td class="py-2.5 flex gap-1.5">
+                        ${g.status === "active" ? `<button onclick="advanceAssociationTurn('${esc(g.id)}')" class="rounded ${isMyTurn ? "bg-amber-600 text-white" : "bg-blue-600/20 text-blue-300"} px-2.5 py-1 font-bold">${isMyTurn ? (lang === "ar" ? "💰 قبض دوري الآن" : "Collect Payout") : (lang === "ar" ? "تسجيل سداد الدور" : "Pay Turn")}</button>` : `<span class="text-emerald-400">✔️ ${lang === "ar" ? "منتهية" : "Ended"}</span>`}
+                        <button onclick="deleteAssociation('${esc(g.id)}')" class="rounded px-2 py-1 text-rose-400">🗑️</button>
+                      </td>
+                    </tr>`;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>`;
+      } else if (activeTab === "inventory") {
+        const list = data.inventory.filter((i) => (!invSearch || i.name.toLowerCase().includes(invSearch.toLowerCase())) && (invFilter === "all" || invStatus(i) === invFilter));
+        body.innerHTML = `
+          <div class="space-y-5">
+            <form onsubmit="saveItemForm(event)" class="no-print rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-3 text-xs">
+              <div class="flex justify-between items-center"><span class="font-bold text-emerald-400">🏭 ${lang === "ar" ? "إضافة صنف (يدعم المحل والمخازن والجملة)" : "Add Warehouse/Retail Item"}</span>
+              <button type="button" onclick="openScannerModal()" class="rounded-xl border border-teal-500/40 bg-teal-600/20 px-3 py-1.5 font-bold text-teal-300">📷 ${lang === "ar" ? "مسح فاتورة AI" : "Scan Invoice"}</button></div>
+              <div class="grid grid-cols-2 sm:grid-cols-8 gap-2">
+                <input id="i-name" required placeholder="${lang === "ar" ? "اسم الصنف" : "Name"}" class="col-span-2 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                <input id="i-unit" value="كرتونة" placeholder="${lang === "ar" ? "الوحدة (كرتونة/قطعة)" : "Unit"}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                <input id="i-qty" type="number" required placeholder="${lang === "ar" ? "الكمية" : "Qty"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                <input id="i-buy" type="number" step="0.5" required placeholder="${lang === "ar" ? "شراء" : "Buy"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                <input id="i-wholesale" type="number" step="0.5" placeholder="${lang === "ar" ? "سعر الجملة" : "Wholesale"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                <input id="i-sell" type="number" step="0.5" required placeholder="${lang === "ar" ? "سعر القطاعي" : "Retail"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+                <select id="i-deliv" class="rounded-xl border border-slate-700 bg-slate-950 px-2 py-2 text-white">
+                  <option value="delivered">${lang === "ar" ? "مُسلّم بالمخزن" : "Delivered"}</option>
+                  <option value="pending">${lang === "ar" ? "توريد معلّق" : "Pending"}</option>
+                </select>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-slate-400">${lang === "ar" ? "تاريخ الصلاحية:" : "Expiry:"}</span>
+                  <input id="i-exp" type="date" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-white" />
+                </div>
+                <button type="submit" class="rounded-xl bg-emerald-600 px-5 py-2 font-bold text-white">${lang === "ar" ? "حفظ الصنف" : "Save Item"}</button>
+              </div>
+            </form>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-3 overflow-x-auto">
+              <div class="no-print flex flex-wrap justify-between items-center gap-2 text-xs">
+                <div class="flex gap-1">
+                  ${["all", "active", "low", "slow", "expired"].map((f) => `<button onclick="invFilter='${f}';renderAll()" class="rounded-lg px-2.5 py-1 font-bold ${invFilter === f ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-300"}">${f === "all" ? (lang === "ar" ? "الكل" : "All") : f === "low" ? (lang === "ar" ? "نواقص" : "Low") : f === "expired" ? (lang === "ar" ? "صلاحية" : "Expiry") : f === "slow" ? (lang === "ar" ? "راكد" : "Slow") : (lang === "ar" ? "سليم" : "Active")}</button>`).join("")}
+                </div>
+                <input value="${esc(invSearch)}" oninput="invSearch=this.value;renderAll()" placeholder="${lang === "ar" ? "بحث في الأصناف..." : "Search items..."}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-white" />
+              </div>
+              <table class="w-full text-xs">
+                <thead><tr class="border-b border-slate-800 text-slate-400">
+                  <th class="py-2 text-start">${lang === "ar" ? "الصنف والوحدة" : "Item & Unit"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الكمية" : "Qty"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "شراء / جملة / قطاعي" : "Buy / Wholesale / Retail"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "التوريد والحالة" : "Delivery & Status"}</th>
+                  <th class="no-print py-2 text-start">${lang === "ar" ? "إجراءات البيع" : "POS Actions"}</th>
+                </tr></thead>
+                <tbody class="divide-y divide-slate-800">
+                  ${list.map((it) => {
+                    const st = invStatus(it);
+                    const badgeCls = st === "expired" ? "bg-rose-500/20 text-rose-300" : (st === "slow" || st === "low") ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300";
+                    return `<tr>
+                      <td class="py-2.5 font-bold">${esc(it.name)} <span class="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-blue-300">${esc(it.unit || "قطعة")}</span> <span class="text-slate-500 font-normal">(${esc(it.expiry)})</span></td>
+                      <td class="py-2.5 font-mono ${it.qty <= 3 ? "text-amber-400 font-bold" : ""}">${it.qty}</td>
+                      <td class="py-2.5 font-mono">${it.buy} / <span class="text-blue-300">${it.wholesale || it.sell}</span> / <span class="text-emerald-400">${it.sell}</span></td>
+                      <td class="py-2.5 space-x-1 space-x-reverse">
+                        <span class="rounded px-2 py-0.5 font-bold ${badgeCls}">${st}</span>
+                        <button onclick="toggleDeliveryStatus(${it.id})" class="rounded px-2 py-0.5 text-[11px] ${it.deliveryStatus === "pending" ? "bg-amber-500/20 text-amber-300" : "bg-slate-800 text-slate-300"}">${it.deliveryStatus === "pending" ? (lang === "ar" ? "⏳ معلّق" : "Pending") : (lang === "ar" ? "🚚 مُسلّم" : "Delivered")}</button>
+                      </td>
+                      <td class="no-print py-2.5 flex flex-wrap gap-1">
+                        <button onclick="sellCash(${it.id},1,false)" class="rounded bg-emerald-600/20 px-2 py-1 text-emerald-300">${lang === "ar" ? "كاش" : "Cash"}</button>
+                        <button onclick="sellCash(${it.id},1,true)" class="rounded bg-indigo-600/20 px-2 py-1 text-indigo-300">${lang === "ar" ? "كاش جملة" : "Wholesale"}</button>
+                        <button onclick="openPosModal(${it.id})" class="rounded bg-blue-600/20 px-2 py-1 text-blue-300">${lang === "ar" ? "آجل/قسط" : "Credit/Plan"}</button>
+                        <button onclick="sellCost(${it.id})" class="rounded bg-amber-600/20 px-2 py-1 text-amber-300">${lang === "ar" ? "تعادل" : "Cost"}</button>
+                        <button onclick="deleteItem(${it.id})" class="rounded px-2 py-1 text-rose-400">🗑️</button>
+                      </td>
+                    </tr>`;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>`;
+      } else if (activeTab === "obligations") {
+        body.innerHTML = `
+          <div class="space-y-5 text-xs">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="rounded-2xl border border-emerald-500/30 bg-slate-900 p-4">
+                <div class="text-emerald-300 font-bold">🟢 ${lang === "ar" ? "إجمالي ما لك (ليه فلوس)" : "Total Receivables"}</div>
+                <div class="font-mono text-2xl font-extrabold text-emerald-400 mt-1">${pos.receivables} ${cur}</div>
+                <div class="text-slate-400 mt-1">${lang === "ar" ? `ديون عملاء (${pos.customerDebt}) + أقساط متبقية (${pos.pendingInstallments})` : `Customers (${pos.customerDebt}) + Installments (${pos.pendingInstallments})`}</div>
+              </div>
+              <div class="rounded-2xl border border-rose-500/30 bg-slate-900 p-4">
+                <div class="text-rose-300 font-bold">🔴 ${lang === "ar" ? "إجمالي ما عليك (عليه فلوس)" : "Total Payables"}</div>
+                <div class="font-mono text-2xl font-extrabold text-rose-400 mt-1">${pos.payables} ${cur}</div>
+                <div class="text-slate-400 mt-1">${lang === "ar" ? `موردين ومصروفات (${pos.unpaidObligations}) + أسهم جمعيات (${pos.activeAssocOutflow})` : `Suppliers/Expenses (${pos.unpaidObligations}) + Assoc (${pos.activeAssocOutflow})`}</div>
+              </div>
+              <div class="rounded-2xl border border-teal-500/30 bg-slate-900 p-4">
+                <div class="text-teal-300 font-bold">⚖️ ${lang === "ar" ? "صافي الموقف الحقيقي (رأسك من رجليك)" : "True Net Position"}</div>
+                <div class="font-mono text-2xl font-extrabold ${pos.netPosition >= 0 ? "text-teal-400" : "text-amber-400"} mt-1">${pos.netPosition} ${cur}</div>
+                <div class="text-slate-400 mt-1">${lang === "ar" ? "شامل محفظة الطوارئ النقدية" : "Includes Emergency Wallet"}</div>
+              </div>
+            </div>
+
+            <form onsubmit="saveObligationForm(event)" class="no-print rounded-2xl border border-slate-800 bg-slate-900 p-5 grid grid-cols-1 gap-3 sm:grid-cols-6">
+              <input id="o-party" required placeholder="${lang === "ar" ? "اسم المورد / الجهة" : "Supplier / Party"}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <select id="o-cat" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white">
+                <option value="supplier">${lang === "ar" ? "مورد بضاعة" : "Supplier"}</option>
+                <option value="expense">${lang === "ar" ? "مصروف تشغيلي (إيجار/كهرباء)" : "Operating Expense"}</option>
+              </select>
+              <input id="o-title" required placeholder="${lang === "ar" ? "بيان الالتزام" : "Description"}" class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="o-amt" type="number" step="0.5" required placeholder="${lang === "ar" ? "المبلغ" : "Amount"}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <input id="o-date" type="date" value="${daysFromNowStr(7)}" class="font-mono rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" />
+              <button type="submit" class="rounded-xl bg-rose-600 px-4 py-2 font-bold text-white hover:bg-rose-500">${lang === "ar" ? "تسجيل التزام عليك" : "Add Payable"}</button>
+            </form>
+
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 overflow-x-auto">
+              <h3 class="font-bold text-sm text-rose-300 mb-3">📋 ${lang === "ar" ? "سجل الموردين والمصروفات المستحقة عليك" : "Suppliers & Operating Expenses"}</h3>
+              <table class="w-full">
+                <thead><tr class="border-b border-slate-800 text-slate-400">
+                  <th class="py-2 text-start">${lang === "ar" ? "الجهة" : "Party"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "النوع" : "Category"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "البيان" : "Title"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "المبلغ" : "Amount"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الاستحقاق" : "Due Date"}</th>
+                  <th class="py-2 text-start">${lang === "ar" ? "الحالة والإجراء" : "Status"}</th>
+                </tr></thead>
+                <tbody class="divide-y divide-slate-800">
+                  ${data.obligations.map((o) => `
+                    <tr>
+                      <td class="py-2.5 font-bold">${esc(o.party)}</td>
+                      <td class="py-2.5">${o.category === "supplier" ? (lang === "ar" ? "🏭 مورد" : "Supplier") : (lang === "ar" ? "🧾 مصروف" : "Expense")}</td>
+                      <td class="py-2.5 text-slate-300">${esc(o.title)}</td>
+                      <td class="py-2.5 font-mono text-rose-400 font-bold">${o.amount} ${cur}</td>
+                      <td class="py-2.5 font-mono">${esc(o.dueDate)}</td>
+                      <td class="py-2.5 flex gap-1.5">
+                        <button onclick="toggleObligationPaid('${esc(o.id)}')" class="rounded px-2.5 py-1 font-bold ${o.paid ? "bg-emerald-600/20 text-emerald-300" : "bg-amber-600/20 text-amber-300"}">${o.paid ? (lang === "ar" ? "✔️ تم السداد" : "Paid") : (lang === "ar" ? "تسجيل سداد" : "Mark Paid")}</button>
+                        <button onclick="deleteObligation('${esc(o.id)}')" class="rounded px-2 py-1 text-rose-400">🗑️</button>
+                      </td>
+                    </tr>`).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>`;
+      } else if (activeTab === "accounting") {
+        const stressedDebt = Math.round(totalDebt * (1 - delayStressPct / 100) * 10) / 10;
+        const f10 = Math.round(Math.max(data.realizedProfit, expProfit * 0.35) * seasonMult * (1 - delayStressPct / 200) * 10) / 10;
+        const redDebt = data.customers.filter((c) => c.status === "red").reduce((s, c) => s + c.debt, 0);
+        const yellowDebt = data.customers.filter((c) => c.status === "yellow").reduce((s, c) => s + c.debt, 0);
+        const greenDebt = data.customers.filter((c) => c.status === "green").reduce((s, c) => s + c.debt, 0);
+        const maxBar = Math.max(1, totalDebt);
+
+        body.innerHTML = `
+          <div class="space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><p class="text-xs text-slate-400">${lang === "ar" ? "الأرباح المحققة" : "Realized Profit"}</p><p class="font-mono text-2xl font-bold text-emerald-400 mt-1">${data.realizedProfit.toFixed(1)} ${cur}</p></div>
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><p class="text-xs text-slate-400">${lang === "ar" ? "الأرباح المتوقعة من المخزن" : "Expected Stock Profit"}</p><p class="font-mono text-2xl font-bold text-blue-400 mt-1">${expProfit.toFixed(1)} ${cur}</p></div>
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5"><p class="text-xs text-slate-400">${lang === "ar" ? "صافي الموقف المالي" : "Net Financial Position"}</p><p class="font-mono text-2xl font-bold ${pos.netPosition >= 0 ? "text-teal-400" : "text-rose-400"} mt-1">${pos.netPosition.toFixed(1)} ${cur}</p></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-3">
+                <h3 class="font-bold text-slate-200">📊 ${lang === "ar" ? "توزيع الديون حسب المخاطر" : "Debt Risk Distribution"}</h3>
+                <div class="space-y-2">
+                  <div>
+                    <div class="flex justify-between mb-1"><span>🔴 ${lang === "ar" ? "خطر عالي" : "High Risk"}</span><span class="font-mono">${redDebt} ${cur}</span></div>
+                    <div class="h-2.5 w-full rounded-full bg-slate-800"><div class="h-2.5 rounded-full bg-rose-500" style="width:${Math.round((redDebt/maxBar)*100)}%"></div></div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between mb-1"><span>🟡 ${lang === "ar" ? "تحذير" : "Warning"}</span><span class="font-mono">${yellowDebt} ${cur}</span></div>
+                    <div class="h-2.5 w-full rounded-full bg-slate-800"><div class="h-2.5 rounded-full bg-amber-500" style="width:${Math.round((yellowDebt/maxBar)*100)}%"></div></div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between mb-1"><span>🟢 ${lang === "ar" ? "ملتزم" : "Healthy"}</span><span class="font-mono">${greenDebt} ${cur}</span></div>
+                    <div class="h-2.5 w-full rounded-full bg-slate-800"><div class="h-2.5 rounded-full bg-emerald-500" style="width:${Math.round((greenDebt/maxBar)*100)}%"></div></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-3">
+                <div class="flex justify-between items-center">
+                  <h3 class="font-bold text-teal-300">🎛️ ${lang === "ar" ? "محاكي الأزمات والمواسم (What-If)" : "What-If Crisis & Season Simulator"}</h3>
+                  <select onchange="seasonMult=Number(this.value);renderAll()" class="rounded-lg border border-slate-700 bg-slate-950 px-2 py-1">
+                    <option value="1" ${seasonMult===1?"selected":""}>موسم عادي (1.0x)</option>
+                    <option value="1.5" ${seasonMult===1.5?"selected":""}>ذروة / رمضان (1.5x)</option>
+                    <option value="0.7" ${seasonMult===0.7?"selected":""}>ركود (0.7x)</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex justify-between text-slate-400 mb-1"><span>${lang === "ar" ? "نسبة تأخر العملاء عن السداد:" : "Simulated Payment Delay:"}</span><strong class="font-mono text-amber-300">${delayStressPct}%</strong></div>
+                  <input type="range" min="0" max="80" step="10" value="${delayStressPct}" oninput="delayStressPct=Number(this.value);renderAll()" class="w-full accent-emerald-500" />
+                </div>
+                <div class="grid grid-cols-3 gap-2 font-mono pt-1">
+                  <div class="rounded-xl bg-slate-950 p-2.5">10d: <strong class="text-emerald-400">${f10}</strong></div>
+                  <div class="rounded-xl bg-slate-950 p-2.5">30d: <strong class="text-blue-400">${(f10*3).toFixed(1)}</strong></div>
+                  <div class="rounded-xl bg-slate-950 p-2.5">تحصيل متوقع: <strong class="text-amber-400">${stressedDebt}</strong></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-2 text-xs">
+              <h3 class="font-bold mb-2">${lang === "ar" ? "سجل التدقيق والحركات المحاسبية (Audit Trail)" : "Ledger & Audit Trail"}</h3>
+              ${data.transactions.map((tx) => `<div class="flex justify-between rounded-xl border border-slate-800 bg-slate-950 px-3 py-2"><span>[${esc(tx.timestamp)}] ${tx.actor === "ai" ? "🤖 [AI] " : "👤 "}${esc(tx.title)}</span><strong class="font-mono text-emerald-400">${tx.amount} ${cur}</strong></div>`).join("")}
+            </div>
+          </div>`;
+      } else if (activeTab === "advisor") {
+        body.innerHTML = `
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 text-xs">
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-2">
+              <div class="flex justify-between items-center mb-2">
+                <h3 class="font-bold text-sm">${lang === "ar" ? "توصيات مستشار البضاعة والتسويق الذكي" : "Smart Goods & Marketing Advisor"}</h3>
+                <button onclick="openMarketingModal()" class="rounded-lg bg-purple-600/20 border border-purple-500/40 px-2.5 py-1 text-purple-300 font-bold">📣 ${lang === "ar" ? "توليد إعلان" : "Create Ad"}</button>
+              </div>
+              ${data.inventory.map((i) => {
+                const st = invStatus(i);
+                const rec = st === "expired" ? (lang === "ar" ? "تصفية فورية بسعر التعادل لتجنب الخسارة" : "Liquidate at cost immediately")
+                  : st === "low" ? (lang === "ar" ? "طلب إعادة توريد عاجل قبل النفاد" : "Reorder urgently")
+                  : st === "slow" ? (lang === "ar" ? "صنف راكد — أضفه في عرض ترويجي" : "Slow mover — bundle offer")
+                  : (lang === "ar" ? "أداء ممتاز — حافظ على المخزون" : "Healthy turnover");
+                return `<div class="rounded-xl border border-slate-800 bg-slate-950 p-3 flex justify-between items-center"><div><strong>${esc(i.name)}</strong> <span class="text-slate-400">(${lang === "ar" ? "مبيعات:" : "Sold:"} ${i.salesCount})</span><div class="text-teal-300 mt-0.5">💡 ${rec}</div></div><span class="font-mono text-slate-300">${i.qty} ${esc(i.unit || "")}</span></div>`;
+              }).join("")}
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-900 p-5 space-y-3">
+              <h3 class="font-bold text-sm">${lang === "ar" ? "طلبات الزبائن غير المتوفرة (قائمة شراء ذكية)" : "Missed Customer Requests"}</h3>
+              <form onsubmit="addReq(event)" class="flex gap-2"><input id="req-inp" required placeholder="${lang === "ar" ? "اسم الصنف..." : "Item..."}" class="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white" /><button class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">+</button></form>
+              ${data.requests.map((r, idx) => `<div class="flex justify-between items-center rounded-xl border border-slate-800 bg-slate-950 px-3 py-2"><span>${esc(r.name)}</span><div class="flex items-center gap-2"><span class="font-mono text-blue-300">×${r.count}</span><button onclick="deleteReq(${idx})" class="text-rose-400">🗑️</button></div></div>`).join("")}
+            </div>
+          </div>`;
+      } else {
+        body.innerHTML = `
+          <div class="rounded-2xl border border-slate-800 bg-slate-900 p-6 space-y-4 text-xs">
+            <h3 class="text-base font-bold">${lang === "ar" ? "درع أمان وحوكمة البيانات" : "Data Privacy & Governance Shield"}</h3>
+            <p class="text-slate-400">${lang === "ar" ? "تعمل البيانات محلياً Offline-First مع قفل PIN، قفل تلقائي عند الخمول، تأكيد قبل الحذف، وتصدير شامل للبيانات لحماية أمان التاجر." : "Offline-First storage with PIN lock, idle auto-lock, and phone masking."}</p>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="maskPhones=!maskPhones;renderAll()" class="rounded-xl bg-emerald-600 px-4 py-2 font-bold text-white">${maskPhones ? (lang === "ar" ? "إلغاء إخفاء الهواتف" : "Unmask Phones") : (lang === "ar" ? "تفعيل إخفاء الهواتف" : "Mask Phones")}</button>
+              <button onclick="exportJson()" class="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 font-bold text-teal-300">⬇️ ${lang === "ar" ? "حفظ نسخة احتياطية الآن" : "Backup Now"}</button>
+            </div>
+          </div>`;
+      }
+    }
+  </script>
+</body>
+</html>
